@@ -1,6 +1,7 @@
 # Databricks notebook source
+# Start
 from pyspark.sql.functions import *
-import re
+import re 
 
 # COMMAND ----------
 
@@ -42,11 +43,14 @@ print (sourceSilverFilePath)
 
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
+sourceBronzeFilePath = "abfss://bronze@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/05/FactInvoiceLineItem_2021_05_21.parquet"
 sourceBronzeDF = spark.read.parquet(sourceBronzeFilePath)
+sourceBronzeDF.count()
 
 # COMMAND ----------
 
 # Fix the column headers 
+
 sourceBronzeDF = sourceBronzeDF.toDF(*(re.sub(r'[#&()\-\s\']+', '', c) for c in sourceBronzeDF.columns))
 
 # COMMAND ----------
