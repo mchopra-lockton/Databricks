@@ -43,6 +43,7 @@ print (sourceSilverFilePath)
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 sourceBronzeDF = spark.read.parquet(sourceBronzeFilePath)
+sourceBronzeDF.count()
 
 # COMMAND ----------
 
