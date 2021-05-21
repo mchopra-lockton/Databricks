@@ -25,8 +25,6 @@ dbutils.widgets.text("ProjectFolderName", "","")
 sourcePath = dbutils.widgets.get("ProjectFolderName")
 dbutils.widgets.text("ProjectFileName", "","")
 sourceFile = dbutils.widgets.get("ProjectFileName")
-dbutils.widgets.text("TableName", "","")
-sourceTable = dbutils.widgets.get("TableName")
 
 # Set the path for Bronze layer 
 sourceBronzePath = BronzeContainerPath + sourcePath
@@ -36,13 +34,9 @@ sourceBronzeFilePath = sourceBronzePath + "/" + sourceFile
 sourceSilverPath = SilverContainerPath + sourcePath
 sourceSilverFilePath = sourceSilverPath + "/" + sourceFile
 
-#Set the file path to log error
-badRecordsPath = badRecordsRootPath + sourceTable + "/"
-
 print ("Param -\'Variables':")
 print (sourceBronzeFilePath)
 print (sourceSilverFilePath)
-print (badRecordsPath)
 
 # COMMAND ----------
 
