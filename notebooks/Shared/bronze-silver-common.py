@@ -48,14 +48,12 @@ print (badRecordsPath)
 
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
-#sourceBronzeFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Benefits/POSTING_RECORD/2021/05/POSTING_RECORD_2021_05_20.parquet"
 sourceBronzeDF = spark.read.parquet(sourceBronzeFilePath)
 
 # COMMAND ----------
 
 # Fix the column headers 
 sourceBronzeDF = sourceBronzeDF.toDF(*(re.sub(r'[#&()\-\s\']+', '', c) for c in sourceBronzeDF.columns))
-# display(sourceBronzeDF)
 
 # COMMAND ----------
 
@@ -72,9 +70,6 @@ display(sourceBronzeDF.head(10))
 # Write the parquet file to Silver zone
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceBronzeDF.write.mode("overwrite").parquet(sourceSilverFilePath)
-#targetfileDF = spark.read.parquet(sourceSilverFilePath)
-#print (sourceSilverFilePath)
-#display(targetfileDF)
 
 # COMMAND ----------
 
