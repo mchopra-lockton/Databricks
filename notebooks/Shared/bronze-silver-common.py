@@ -58,7 +58,7 @@ columnList = [item[0] for item in dt if item[1].startswith('string')]
 for col_name in sourceBronzeDF.columns:
   if col_name in columnList:
     sourceBronzeDF = sourceBronzeDF.withColumn(col_name, regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(col_name, '[…• ¢£®°³¼½¾æð]',''),'[‘’´]',"'"),'[–—]','-'),'[ºÓôÖØ]','o'),'[àÁÂÃÄÅ]','a'),'Ç','c'),'[ÈÉêë]','e'),'[íîï]','i'),'Ñ','n'),'ß','B'),'[ùúÜ]','u'),'ý','y'))
-display(sourceBronzeDF.head(10))
+#display(sourceBronzeDF.head(10))
 
 # COMMAND ----------
 
