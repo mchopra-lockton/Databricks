@@ -21,9 +21,9 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
 # MAGIC 
-# MAGIC val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC print (GoldDimTableName)
 # MAGIC print (GoldFactTableName)
 
@@ -147,7 +147,6 @@ current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_NX_RATE_TYPE
 """
 )
-display(finalDataDF)
 
 # COMMAND ----------
 
@@ -161,24 +160,25 @@ if (finalDataDF.count() == 0):
 sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
-recordCountDF = spark.createDataFrame([
-    (sourceRecordCount,targetRecordCount)
-  ],["SourceRecordCount","TargetRecordCount"])
+reconDF = spark.createDataFrame([
+    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
+  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
-# Write the record count to ADLS
-recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
+# Write the recon record to SQL DB
+reconTable = "qc.Recon"
+reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC val stmt = connection.createStatement()
+# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
+# MAGIC lazy val stmt = connection.createStatement()
 # MAGIC //val sql = "truncate table Gold.FCT_NX_INV_LINE_ITEM_TRANS; delete from Gold.DIM_NX_INV_LINE_ITEM_ENTITY; DBCC CHECKIDENT ('Gold.DIM_NX_INV_LINE_ITEM_ENTITY', RESEED, 0)"
 # MAGIC //val sql = "truncate table " + GoldFactTableName + "; delete from " + GoldDimTableNameComplete + "; DBCC CHECKIDENT ('" + GoldDimTableNameComplete + "', RESEED, 0)";
-# MAGIC val sql_truncate = "truncate table " + GoldFactTableName
+# MAGIC lazy val sql_truncate = "truncate table " + GoldFactTableName
 # MAGIC stmt.execute(sql_truncate)
-# MAGIC val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
+# MAGIC lazy val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
 
