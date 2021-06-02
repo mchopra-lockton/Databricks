@@ -21,13 +21,17 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC val GoldFactTableName = dbutils.widgets.get("TableName")
+# MAGIC lazy val GoldFactTableName = dbutils.widgets.get("TableName")
 
 # COMMAND ----------
 
 # Set the path for Silver layer for Nexsure
 
 now = datetime.now() 
+
+dbutils.widgets.text("TableName", "","")
+GoldFactTableName = dbutils.widgets.get("TableName")
+
 #sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/05"
 sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/" + now.strftime("%m")
 #sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/" + "05"
@@ -37,9 +41,6 @@ sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") + "_" + now.strft
 #sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
 #sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") +"_"+ "05" + "_21.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-
-dbutils.widgets.text("TableName", "","")
-GoldFactTableName = dbutils.widgets.get("TableName")
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
@@ -68,6 +69,7 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
+
 # Temporary cell - DELETE
 now = datetime.now() 
 GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
@@ -84,7 +86,7 @@ WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 
 # COMMAND ----------
 
@@ -112,7 +114,7 @@ sourceSilverDF.createOrReplaceTempView("FCT_NX_INV_LINE_ITEM_TRANS")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_CARRIER]) carrier"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
+# display(carrierDF)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
@@ -120,7 +122,7 @@ carrierDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(clientDF)
+# display(clientDF)
 # Register table so it is accessible via SQL Context
 clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
@@ -128,7 +130,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_COMM_TAX]) commtax"
 commtaxDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(commtaxDF)
+# display(commtaxDF)
 # Register table so it is accessible via SQL Context
 commtaxDF.createOrReplaceTempView("DIM_NX_COMM_TAX")
 
@@ -136,7 +138,7 @@ commtaxDF.createOrReplaceTempView("DIM_NX_COMM_TAX")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_INV]) inv"
 invDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(invDF)
+# display(invDF)
 # Register table so it is accessible via SQL Context
 invDF.createOrReplaceTempView("DIM_NX_INV")
 
@@ -144,7 +146,7 @@ invDF.createOrReplaceTempView("DIM_NX_INV")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_INV_LINE_ITEM_ENTITY]) invlnitment"
 invlnitmentDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(invlnitmentDF)
+# display(invlnitmentDF)
 # Register table so it is accessible via SQL Context
 invlnitmentDF.createOrReplaceTempView("DIM_NX_INV_LINE_ITEM_ENTITY")
 
@@ -152,7 +154,7 @@ invlnitmentDF.createOrReplaceTempView("DIM_NX_INV_LINE_ITEM_ENTITY")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_LOB]) lob"
 lobDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(lobDF)
+# display(lobDF)
 # Register table so it is accessible via SQL Context
 lobDF.createOrReplaceTempView("DIM_NX_LOB")
 
@@ -160,7 +162,7 @@ lobDF.createOrReplaceTempView("DIM_NX_LOB")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_ORG]) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(orgDF)
+# display(orgDF)
 # Register table so it is accessible via SQL Context
 orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
@@ -168,7 +170,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_RATE_TYPE]) ratetype"
 ratetypeDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(ratetypeDF)
+# display(ratetypeDF)
 # Register table so it is accessible via SQL Context
 ratetypeDF.createOrReplaceTempView("DIM_NX_RATE_TYPE")
 
@@ -176,7 +178,7 @@ ratetypeDF.createOrReplaceTempView("DIM_NX_RATE_TYPE")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_RESPONSIBILITY]) resp"
 respDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(respDF)
+# display(respDF)
 # Register table so it is accessible via SQL Context
 respDF.createOrReplaceTempView("DIM_NX_RESPONSIBILITY")
 
@@ -184,7 +186,7 @@ respDF.createOrReplaceTempView("DIM_NX_RESPONSIBILITY")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_EMP]) emp"
 empDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(empDF)
+# display(empDF)
 # Register table so it is accessible via SQL Context
 empDF.createOrReplaceTempView("DIM_NX_EMP")
 
@@ -192,7 +194,7 @@ empDF.createOrReplaceTempView("DIM_NX_EMP")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_POL]) pol"
 polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(empDF)
+# display(empDF)
 # Register table so it is accessible via SQL Context
 polDF.createOrReplaceTempView("DIM_NX_POL")
 
@@ -200,7 +202,7 @@ polDF.createOrReplaceTempView("DIM_NX_POL")
 
 pushdown_query = "(select * from [Gold].[DIM_NX_DATE]) date"
 dtDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(empDF)
+# display(empDF)
 # Register table so it is accessible via SQL Context
 dtDF.createOrReplaceTempView("DIM_NX_DATE")
 
@@ -209,7 +211,7 @@ dtDF.createOrReplaceTempView("DIM_NX_DATE")
 # MAGIC 
 # MAGIC %sql
 # MAGIC -- Can be deleted later just added for testing purpose
-# MAGIC SELECT
+# MAGIC /*SELECT
 # MAGIC InvoiceLineItemKey as INV_LINE_ITEM_TRNS_KEY ,
 # MAGIC CommissionFeeBasedOnKey as COMM_FEE_BSD_ON_KEY  ,
 # MAGIC GLPeriodKey as GL_PRD_KEY ,
@@ -267,11 +269,13 @@ dtDF.createOrReplaceTempView("DIM_NX_DATE")
 # MAGIC JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.ORG_KEY
 # MAGIC JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.INV_LINE_ITM_ENTY_KEY
 # MAGIC JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY limit 100
+# MAGIC */
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC ---- Can be deleted later just added for testing purpose
+# MAGIC /*
 # MAGIC SELECT COUNT(1)
 # MAGIC FROM FCT_NX_INV_LINE_ITEM_TRANS fact
 # MAGIC LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.CARIER_KEY = fact.BillingCarrierKey
@@ -287,6 +291,7 @@ dtDF.createOrReplaceTempView("DIM_NX_DATE")
 # MAGIC JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.ORG_KEY
 # MAGIC JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.INV_LINE_ITM_ENTY_KEY
 # MAGIC JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY
+# MAGIC */
 
 # COMMAND ----------
 
@@ -368,8 +373,8 @@ sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
 recordCountDF = spark.createDataFrame([
-    (sourceRecordCount,targetRecordCount)
-  ],["SourceRecordCount","TargetRecordCount"])
+    (GoldFactTableName,now,sourceRecordCount,targetRecordCount,sourceSilverDF,BatchId,WorkFlowId)
+  ],["TableName","DateTime","SourceRecordCount","TargetRecordCount","Filename","BatchId","WorkflowId"])
 
 # Write the record count to ADLS
 recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
@@ -378,13 +383,14 @@ recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header",
 
 # MAGIC %scala
 # MAGIC // Truncate Fact table
-# MAGIC val GoldFactTableName = "gold.FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC val stmt = connection.createStatement()
-# MAGIC val sql = "truncate table " + GoldFactTableName;
+# MAGIC //lazy val GoldFactTableName = "gold.FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
+# MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val sql = "truncate table " + GoldFactTableName;
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
 
 # COMMAND ----------
 
+GoldFactTableNameComplete = "gold." + GoldFactTableName
 finalDataDF.write.jdbc(url=Url, table="[Gold].[FCT_NX_INV_LINE_ITEM_TRANS]", mode="append")
