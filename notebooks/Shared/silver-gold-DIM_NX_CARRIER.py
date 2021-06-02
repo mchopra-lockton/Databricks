@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "./Database Config"
+# MAGIC %run "/Shared/Database Config"
 
 # COMMAND ----------
 
@@ -118,7 +118,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_CARRIER")
 dummyDataDF = spark.sql(
 f""" 
 SELECT
- -1 AS CARIER_KEY
+ -99999 AS CARIER_KEY
 ,-1 AS CARIER_ID
 ,-1 AS CARIER_CLAS
 ,-1 AS CARIER_NAME
@@ -197,6 +197,3 @@ recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header",
 GoldDimTableNameComplete = "gold." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
-
-# COMMAND ----------
-
