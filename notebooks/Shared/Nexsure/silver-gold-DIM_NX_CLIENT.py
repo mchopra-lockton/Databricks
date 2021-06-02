@@ -21,9 +21,9 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
 # MAGIC 
-# MAGIC val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC print (GoldDimTableName)
 # MAGIC print (GoldFactTableName)
 
@@ -89,7 +89,7 @@ WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC val GoldDimTableName = "Dim_NX_CLIENT"
+# MAGIC lazy val GoldDimTableName = "Dim_NX_CLIENT"
 
 # COMMAND ----------
 
@@ -167,12 +167,12 @@ if (finalDataDF.count() == 0):
 sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
-recordCountDF = spark.createDataFrame([
-    (sourceRecordCount,targetRecordCount)
-  ],["SourceRecordCount","TargetRecordCount"])
+reconDF = spark.createDataFrame([
+    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
+  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
-# Write the record count to ADLS
-recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
+# Write the recon record to SQL DB
+reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
