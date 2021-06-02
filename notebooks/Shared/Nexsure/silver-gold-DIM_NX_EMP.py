@@ -21,8 +21,8 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC print (GoldDimTableName)
 # MAGIC print (GoldFactTableName)
 
@@ -88,7 +88,7 @@ WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC val GoldDimTableName = "Dim_NX_Emp"
+# MAGIC lazy val GoldDimTableName = "Dim_NX_Emp"
 
 # COMMAND ----------
 
@@ -111,13 +111,8 @@ except:
 
 # COMMAND ----------
 
-sourceSilverDF.count()
-
-# COMMAND ----------
-
 # Register table so it is accessible via SQL Context
 sourceSilverDF.createOrReplaceTempView("DIM_NX_EMP")
-display(sourceSilverDF)
 
 # COMMAND ----------
 
@@ -160,10 +155,6 @@ FROM DIM_NX_EMP
 
 # COMMAND ----------
 
-finalDataDF.count()
-
-# COMMAND ----------
-
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
@@ -173,12 +164,14 @@ if (finalDataDF.count() == 0):
 # Create a dataframe for record count
 sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
-recordCountDF = spark.createDataFrame([
-    (sourceRecordCount,targetRecordCount)
-  ],["SourceRecordCount","TargetRecordCount"])
+#errorRecordCount = errorDataDF.count()
+reconDF = spark.createDataFrame([
+    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
+  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
-# Write the record count to ADLS
-recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
+# Write the recon record to SQL DB
+reconTable = "qc.Recon"
+reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
