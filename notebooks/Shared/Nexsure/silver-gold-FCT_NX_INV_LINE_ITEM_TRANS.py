@@ -358,7 +358,6 @@ JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.
 JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY
 """
 )
-display(finalDataDF)
 
 # COMMAND ----------
 
