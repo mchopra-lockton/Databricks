@@ -373,7 +373,7 @@ sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
 recordCountDF = spark.createDataFrame([
-    (GoldFactTableName,now,sourceRecordCount,targetRecordCount,sourceSilverDF,BatchId,WorkFlowId)
+    (GoldFactTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
   ],["TableName","DateTime","SourceRecordCount","TargetRecordCount","Filename","BatchId","WorkflowId"])
 
 # Write the record count to ADLS
