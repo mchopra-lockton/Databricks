@@ -163,12 +163,12 @@ if (finalDataDF.count() == 0):
 sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
-recordCountDF = spark.createDataFrame([
+reconDF = spark.createDataFrame([
     (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
-  ],["TableName","DateTime","SourceRecordCount","TargetRecordCount","Filename","BatchId","WorkflowId"])
+  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
-# Write the record count to ADLS
-recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
+# Write the recon record to SQL DB
+reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
