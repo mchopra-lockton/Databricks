@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "./Database Config"
+# MAGIC %run "/Shared/Database Config"
 
 # COMMAND ----------
 
@@ -116,7 +116,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_INV_LINE_ITEM_ENTITY")
 dummyDataDF = spark.sql(
 f""" 
 SELECT
--1 as INV_LINE_ITM_ENTY_KEY,
+-99999 as INV_LINE_ITM_ENTY_KEY,
 -1 as DB_SRC_KEY,
 -1 as SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
@@ -187,6 +187,3 @@ dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 
 #finalDataDF.write.jdbc(url=Url, table="[Gold].[DIM_NX_INV_LINE_ITEM_ENTITY]", mode="append")
-
-# COMMAND ----------
-
