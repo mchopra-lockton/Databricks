@@ -106,10 +106,6 @@ except:
 
 # COMMAND ----------
 
-sourceSilverDF.count()
-
-# COMMAND ----------
-
 # Register table so it is accessible via SQL Context
 sourceSilverDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
@@ -168,7 +164,7 @@ sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
 recordCountDF = spark.createDataFrame([
-    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverDF,BatchId,WorkFlowId)
+    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
   ],["TableName","DateTime","SourceRecordCount","TargetRecordCount","Filename","BatchId","WorkflowId"])
 
 # Write the record count to ADLS
