@@ -3,6 +3,7 @@ IronContainerPath = "abfss://c360iron@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 BronzeContainerPath = "abfss://bronze@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 SilverContainerPath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 GoldContainerPath = "abfss://c360gold@dlsldpdev01v8nkg988.dfs.core.windows.net/"
+reconTable = "qc.Recon"
 
 #Bad Record File Configuration
 badRecordsRootPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/"
