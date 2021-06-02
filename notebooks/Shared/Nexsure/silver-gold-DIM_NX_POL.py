@@ -21,8 +21,8 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC print (GoldDimTableName)
 # MAGIC print (GoldFactTableName)
 
@@ -88,7 +88,7 @@ WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC val GoldDimTableName = "Dim_NX_Pol"
+# MAGIC lazy val GoldDimTableName = "Dim_NX_Pol"
 
 # COMMAND ----------
 
@@ -108,10 +108,6 @@ try:
 except:
   print("Schema mismatch")
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Schema mismatch: " + sourceSilverFilePath}}})
-
-# COMMAND ----------
-
-sourceSilverDF.count()
 
 # COMMAND ----------
 
@@ -182,10 +178,6 @@ FROM DIM_NX_POL
 
 # COMMAND ----------
 
-finalDataDF.count()
-
-# COMMAND ----------
-
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
@@ -195,24 +187,26 @@ if (finalDataDF.count() == 0):
 # Create a dataframe for record count
 sourceRecordCount = sourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
-recordCountDF = spark.createDataFrame([
-    (sourceRecordCount,targetRecordCount)
-  ],["SourceRecordCount","TargetRecordCount"])
+#errorRecordCount = errorDataDF.count()
+reconDF = spark.createDataFrame([
+    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
+  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
-# Write the record count to ADLS
-recordCountDF.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save(recordCountFilePath)
+# Write the recon record to SQL DB
+reconTable = "qc.Recon"
+reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC val stmt = connection.createStatement()
+# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
+# MAGIC lazy val stmt = connection.createStatement()
 # MAGIC //val sql = "truncate table Gold.FCT_NX_INV_LINE_ITEM_TRANS; delete from Gold.DIM_NX_INV_LINE_ITEM_ENTITY; DBCC CHECKIDENT ('Gold.DIM_NX_INV_LINE_ITEM_ENTITY', RESEED, 0)"
 # MAGIC //val sql = "truncate table " + GoldFactTableName + "; delete from " + GoldDimTableNameComplete + "; DBCC CHECKIDENT ('" + GoldDimTableNameComplete + "', RESEED, 0)";
-# MAGIC val sql_truncate = "truncate table " + GoldFactTableName
+# MAGIC lazy val sql_truncate = "truncate table " + GoldFactTableName
 # MAGIC stmt.execute(sql_truncate)
-# MAGIC val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
+# MAGIC lazy val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
 
