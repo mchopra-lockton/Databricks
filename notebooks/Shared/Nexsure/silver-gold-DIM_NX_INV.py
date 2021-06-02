@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "./Database Config"
+# MAGIC %run "/Shared/Database Config"
 
 # COMMAND ----------
 
