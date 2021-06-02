@@ -377,7 +377,6 @@ reconDF = spark.createDataFrame([
   ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
 # Write the recon record to SQL DB
-reconTable = "qc.Recon"
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
