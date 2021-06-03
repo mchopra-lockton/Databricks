@@ -296,7 +296,7 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # MAGIC %scala
 # MAGIC // Truncate Fact table
-# MAGIC lazy val GoldFactTableName = "gold." + GoldFactTableName
+# MAGIC lazy val GoldFactTableNameComplete = "gold." + GoldFactTableName
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
 # MAGIC lazy val sql = "truncate table " + GoldFactTableNameComplete;
