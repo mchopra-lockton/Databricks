@@ -71,22 +71,23 @@ print (recordCountFilePath)
 
 
 # Temporary cell - DELETE
-now = datetime.now() 
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
-sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# now = datetime.now() 
+# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = SilverContainerPath + sourceSilverPath
+# sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
+# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+# badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
+# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/05/FactInvoiceLineItem_2021_05_21.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC // lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 
 # COMMAND ----------
 
@@ -205,93 +206,6 @@ dtDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionPrope
 # display(empDF)
 # Register table so it is accessible via SQL Context
 dtDF.createOrReplaceTempView("DIM_NX_DATE")
-
-# COMMAND ----------
-
-# MAGIC 
-# MAGIC %sql
-# MAGIC -- Can be deleted later just added for testing purpose
-# MAGIC /*SELECT
-# MAGIC InvoiceLineItemKey as INV_LINE_ITEM_TRNS_KEY ,
-# MAGIC CommissionFeeBasedOnKey as COMM_FEE_BSD_ON_KEY  ,
-# MAGIC GLPeriodKey as GL_PRD_KEY ,
-# MAGIC DateBookedKey as DT_BOKD_KEY  ,
-# MAGIC EffectiveDateKey as EFF_DT_KEY ,
-# MAGIC InvoiceKey as INV_KEY  ,
-# MAGIC LineItemLoBKey as LOB_KEY  ,
-# MAGIC PolicyKey as POLICY_KEY  ,
-# MAGIC ClientKey as CLIENT_KEY  ,
-# MAGIC InvoiceLineItemEntityKey as INV_LINE_ITEM_ENTY_KEY ,
-# MAGIC RateTypeKey as RATE_TYPE_KEY  ,
-# MAGIC CommissionableTaxableKey as COMM_TAX_KEY ,
-# MAGIC ProductionResponsibilityKey as PRD_RESP_KEY  ,
-# MAGIC CreatedByEmployeeKey as CRETD_BY_EMP_KEY  ,
-# MAGIC BasisAmt as BASIS_AMT  ,
-# MAGIC DueAmt as DUE_AMT  ,
-# MAGIC AppliedRate as APPLIED_RATE  ,
-# MAGIC ProductionAmt as PRD_AMT  ,
-# MAGIC ProductionCreditPct as PRD_CREDIT_PCT  ,
-# MAGIC InternalID as INT_ID  ,
-# MAGIC BKFactTable as BK_FACT_TABLE  ,
-# MAGIC InsertAuditKey as SRC_AUD_INS_KEY  ,
-# MAGIC UpdateAuditKey as SRC_AUD_UPD_KEY,
-# MAGIC ParentCarrierKey as PARNT_CARIER_KEY  ,
-# MAGIC BillingCarrierKey as BLLNG_CARIER_KEY  ,
-# MAGIC IssuingCarrierKey as ISSNG_CARIER_KEY  ,
-# MAGIC OrgStructureKey as ORG_KEY  ,
-# MAGIC SURR_RESP_ID as SURR_RESP_ID  ,
-# MAGIC SURR_RATE_ID as SURR_RATE_ID ,
-# MAGIC SURR_ORG_ID as SURR_ORG_ID  ,
-# MAGIC SURR_LOB_ID as SURR_LOB_ID  ,
-# MAGIC SURR_INV_ID as SURR_INV_ID,
-# MAGIC SURR_POL_ID as SURR_POL_ID,
-# MAGIC SURR_EMP_ID as SURR_EMP_ID,
-# MAGIC SURR_LINE_ITEM_ID as SURR_LINE_ITEM_ID  ,
-# MAGIC SURR_COMM_TAX_ID as SURR_COMM_TAX_ID  ,
-# MAGIC SURR_CLIENT_ID as SURR_CLIENT_ID  ,
-# MAGIC BCarr.SURR_CARIER_ID as SURR_CARIER_ID  ,
-# MAGIC SURR_DATE_ID as	SURR_DATE_ID  ,
-# MAGIC '{ BatchId }' AS ETL_BATCH_ID,
-# MAGIC '{ WorkFlowId }' AS ETL_WRKFLW_ID,
-# MAGIC current_timestamp() AS ETL_CREATED_DT,
-# MAGIC current_timestamp() AS ETL_UPDATED_DT
-# MAGIC FROM FCT_NX_INV_LINE_ITEM_TRANS fact
-# MAGIC LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.CARIER_KEY = fact.BillingCarrierKey
-# MAGIC LEFT JOIN DIM_NX_CARRIER ICarr on ICarr.CARIER_KEY = fact.IssuingCarrierKey
-# MAGIC LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ProductionResponsibilityKey = Rsp.RESPBLTY_KEY
-# MAGIC LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.POLICY_KEY
-# MAGIC LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.CLIENT_KEY
-# MAGIC LEFT JOIN DIM_NX_LOB LOB on fact.LineItemLoBKey = LOB.LOB_KEY
-# MAGIC JOIN DIM_NX_DATE dt on fact.DateBookedKey = dt.DT_KEY
-# MAGIC JOIN DIM_NX_INV inv on fact.InvoiceKey = inv.INV_KEY
-# MAGIC JOIN DIM_NX_EMP emp on fact.CreatedByEmployeeKey = emp.EMP_KEY
-# MAGIC JOIN DIM_NX_RATE_TYPE Rtp on fact.RateTypeKey = Rtp.RATE_TYP_KEY
-# MAGIC JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.ORG_KEY
-# MAGIC JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.INV_LINE_ITM_ENTY_KEY
-# MAGIC JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY limit 100
-# MAGIC */
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC ---- Can be deleted later just added for testing purpose
-# MAGIC /*
-# MAGIC SELECT COUNT(1)
-# MAGIC FROM FCT_NX_INV_LINE_ITEM_TRANS fact
-# MAGIC LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.CARIER_KEY = fact.BillingCarrierKey
-# MAGIC LEFT JOIN DIM_NX_CARRIER ICarr on ICarr.CARIER_KEY = fact.IssuingCarrierKey
-# MAGIC LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ProductionResponsibilityKey = Rsp.RESPBLTY_KEY
-# MAGIC LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.POLICY_KEY
-# MAGIC LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.CLIENT_KEY
-# MAGIC LEFT JOIN DIM_NX_LOB LOB on fact.LineItemLoBKey = LOB.LOB_KEY
-# MAGIC JOIN DIM_NX_DATE dt on fact.DateBookedKey = dt.DT_KEY
-# MAGIC JOIN DIM_NX_INV inv on fact.InvoiceKey = inv.INV_KEY
-# MAGIC JOIN DIM_NX_EMP emp on fact.CreatedByEmployeeKey = emp.EMP_KEY
-# MAGIC JOIN DIM_NX_RATE_TYPE Rtp on fact.RateTypeKey = Rtp.RATE_TYP_KEY
-# MAGIC JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.ORG_KEY
-# MAGIC JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.INV_LINE_ITM_ENTY_KEY
-# MAGIC JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY
-# MAGIC */
 
 # COMMAND ----------
 
