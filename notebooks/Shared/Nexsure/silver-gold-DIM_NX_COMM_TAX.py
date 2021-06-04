@@ -71,23 +71,24 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "Dim_NX_Comm_Tax"
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-sourceSilverPath = "Invoice/Nexsure/DimCommissionableTaxable/" +now.strftime("%Y") + "/05"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
-sourceSilverFile = "DimCommissionableTaxable_2021_05_21.parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# now = datetime.now() 
+# GoldDimTableName = "Dim_NX_Comm_Tax"
+# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# sourceSilverPath = "Invoice/Nexsure/DimCommissionableTaxable/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = SilverContainerPath + sourceSilverPath
+# sourceSilverFile = "DimCommissionableTaxable_2021_05_21.parquet"
+# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/DimCommissionableTaxable/2021/05/DimCommissionableTaxable_2021_05_21.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldDimTableName = "Dim_NX_Comm_Tax"
+# MAGIC // lazy val GoldDimTableName = "Dim_NX_Comm_Tax"
 
 # COMMAND ----------
 
@@ -161,7 +162,6 @@ reconDF = spark.createDataFrame([
   ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
 # Write the recon record to SQL DB
-reconTable = "qc.Recon"
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
