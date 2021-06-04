@@ -73,23 +73,24 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "DIM_NX_CLIENT"
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/05"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
-sourceSilverFile = "DimEntity_2021_05_25.parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# now = datetime.now() 
+# GoldDimTableName = "DIM_NX_CLIENT"
+# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = SilverContainerPath + sourceSilverPath
+# sourceSilverFile = "DimEntity_2021_05_25.parquet"
+# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/05/DimEntity_2021_05_25.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldDimTableName = "Dim_NX_CLIENT"
+# MAGIC // lazy val GoldDimTableName = "Dim_NX_CLIENT"
 
 # COMMAND ----------
 
@@ -150,7 +151,7 @@ AuditKey as SRC_AUDT_KEY,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_NX_CLIENT
-WHERE EntityClass ='Client'
+WHERE (EntityClass ='Client' or EntityKey = -1)
 """
 )
 display(finalDataDF)
