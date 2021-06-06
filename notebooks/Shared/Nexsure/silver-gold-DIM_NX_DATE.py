@@ -22,10 +22,6 @@ dbutils.widgets.removeAll()
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
 # MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC 
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
 
 # COMMAND ----------
 
@@ -33,9 +29,9 @@ dbutils.widgets.removeAll()
 
 now = datetime.now() 
 #sourceSilverPath = "Reference/Nexsure/DimDate/2021/05"
-sourceSilverPath = "Reference/Nexsure/DimDate/" +now.strftime("%Y") + "/" + now.strftime("%m")
+sourceSilverFolderPath = "Reference/Nexsure/DimDate/" +now.strftime("%Y") + "/" + now.strftime("%m")
 #sourceSilverPath = "Reference/Nexsure/DimDate/" +now.strftime("%Y") + "/" + "05"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
+sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "DimDate_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 #sourceSilverFile = "DimDate_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
@@ -170,7 +166,6 @@ reconDF = spark.createDataFrame([
   ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
 # Write the recon record to SQL DB
-reconTable = "qc.Recon"
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
@@ -179,6 +174,7 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC lazy val sql_truncate = "truncate table " + GoldFactTableName
 # MAGIC stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
@@ -190,3 +186,10 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 GoldDimTableNameComplete = "gold." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
+
+# COMMAND ----------
+
+# Write the final parquet file to Gold zone
+spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
+sourceGoldFilePath = GoldContainerPath + sourceSilverFolderPath + "/" + sourceSilverFile
+finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
