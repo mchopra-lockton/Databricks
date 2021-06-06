@@ -24,9 +24,6 @@ dbutils.widgets.removeAll()
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
 # MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
 
 # COMMAND ----------
 
@@ -37,8 +34,8 @@ dbutils.widgets.text("TableName", "","")
 GoldDimTableName = dbutils.widgets.get("TableName")
 
 # Set the path for Silver layer for Nexsure
-sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/" + now.strftime("%m")
-sourceSilverPath = SilverContainerPath + sourceSilverPath
+sourceSilverFolderPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/" + now.strftime("%m")
+sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
@@ -78,7 +75,7 @@ print (recordCountFilePath)
 # recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 # BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 # WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/05/DimEntity_2021_05_25.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/06/DimEntity_2021_06_04.parquet"
 
 # COMMAND ----------
 
@@ -102,8 +99,13 @@ try:
 #  display(sourceSilverDF)
 #  sourceSilverDF.printSchema
 except:
-  print("Schema mismatch")
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Schema mismatch: " + sourceSilverFilePath}}})
+  # Log the error message
+  errorDF = spark.createDataFrame([
+    (GoldDimTableName,now,sourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
+  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
+  # Write the recon record to SQL DB
+  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
+  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -177,6 +179,7 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC lazy val sql_truncate = "truncate table " + GoldFactTableName
 # MAGIC stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
@@ -188,3 +191,10 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 GoldDimTableNameComplete = "gold." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
+
+# COMMAND ----------
+
+# Write the final parquet file to Gold zone
+spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
+sourceGoldFilePath = GoldContainerPath + sourceSilverFolderPath + "/" + sourceSilverFile
+finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
