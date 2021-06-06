@@ -22,9 +22,6 @@ dbutils.widgets.removeAll()
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
 # MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
 
 # COMMAND ----------
 
@@ -32,8 +29,8 @@ dbutils.widgets.removeAll()
 
 now = datetime.now() 
 #sourceSilverPath = "Person/Nexsure/DimEmployee/2021/05"
-sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/" + now.strftime("%m")
-sourceSilverPath = SilverContainerPath + sourceSilverPath
+sourceSilverFolderPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/" + now.strftime("%m")
+sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "DimEmployee_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 #sourceSilverFile = "DimEmployee_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
@@ -72,23 +69,24 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "Dim_NX_Emp"
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/05"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
-sourceSilverFile = "DimEmployee_2021_05_21.parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# now = datetime.now() 
+# GoldDimTableName = "Dim_NX_Emp"
+# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = SilverContainerPath + sourceSilverPath
+# sourceSilverFile = "DimEmployee_2021_05_21.parquet"
+# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/05/DimEmployee_2021_05_21.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldDimTableName = "Dim_NX_Emp"
+# MAGIC // lazy val GoldDimTableName = "Dim_NX_Emp"
 
 # COMMAND ----------
 
@@ -170,7 +168,6 @@ reconDF = spark.createDataFrame([
   ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
 # Write the recon record to SQL DB
-reconTable = "qc.Recon"
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
@@ -179,6 +176,7 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val GoldFactTableName = "Gold.FCT_NX_INV_LINE_ITEM_TRANS"
 # MAGIC lazy val sql_truncate = "truncate table " + GoldFactTableName
 # MAGIC stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec [Admin].[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
@@ -190,3 +188,10 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 GoldDimTableNameComplete = "gold." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
+
+# COMMAND ----------
+
+# Write the final parquet file to Gold zone
+spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
+sourceGoldFilePath = GoldContainerPath + sourceSilverFolderPath + "/" + sourceSilverFile
+finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
