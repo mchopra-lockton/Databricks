@@ -7,7 +7,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# Setup a connection to ADLS
+# Setup a connection to ADLS 
 spark.conf.set(
   ADLSConnectionURI,
   ADLSConnectionKey
