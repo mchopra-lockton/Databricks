@@ -3,7 +3,8 @@ IronContainerPath = "abfss://c360iron@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 BronzeContainerPath = "abfss://bronze@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 SilverContainerPath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 GoldContainerPath = "abfss://c360gold@dlsldpdev01v8nkg988.dfs.core.windows.net/"
-reconTable = "qc.Recon"
+reconTable = "dbo.Recon"
+finalTableSchema = "dbo"
 
 #Bad Record File Configuration
 badRecordsRootPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/"
@@ -16,7 +17,7 @@ print(IronContainerPath, "\n", BronzeContainerPath,"\n", SilverContainerPath, "\
 # COMMAND ----------
 
 Hostname = "sqlsv-ldp-dev-01.database.windows.net"
-Database = "sqldb-qc-CAP360-dev"
+Database = "sqldb-GoldZone-CAP360-dev"
 Port = 1433
 UN = 'lockadmin'
 PW = 'KuVcI71rd50t$5fj'
@@ -26,22 +27,21 @@ connectionProperties = {
   "password" : PW,
   "driver" : "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 }
+#print(Url)
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC import java.util.Properties
 # MAGIC import java.sql.DriverManager
+# MAGIC lazy val finalTableSchema = "dbo"
 # MAGIC lazy val jdbcUsername = "lockadmin"
 # MAGIC lazy val jdbcPassword = "KuVcI71rd50t$5fj"
 # MAGIC lazy val driverClass = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 # MAGIC // Create the JDBC URL without passing in the user and password parameters.
-# MAGIC lazy val jdbcUrl = s"jdbc:sqlserver://sqlsv-ldp-dev-01.database.windows.net:1433;database=sqldb-qc-CAP360-dev;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+# MAGIC lazy val jdbcUrl = s"jdbc:sqlserver://sqlsv-ldp-dev-01.database.windows.net:1433;database=sqldb-GoldZone-CAP360-dev;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
 # MAGIC // Create a Properties() object to hold the parameters.
-# MAGIC lazy val connectionProperties = new Properties()
-# MAGIC connectionProperties.put("user", s"${jdbcUsername}")
-# MAGIC connectionProperties.put("password", s"${jdbcPassword}")
-# MAGIC connectionProperties.setProperty("Driver", driverClass)
-
-# COMMAND ----------
-
+# MAGIC // lazy val connectionProperties = new Properties()
+# MAGIC // connectionProperties.put("user", s"${jdbcUsername}")
+# MAGIC // connectionProperties.put("password", s"${jdbcPassword}")
+# MAGIC // connectionProperties.setProperty("Driver", driverClass)
