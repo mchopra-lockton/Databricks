@@ -3,11 +3,11 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
-# Setup a connection to ADLS 
+# Setup a connection to ADLS  
 spark.conf.set(
   ADLSConnectionURI,
   ADLSConnectionKey
