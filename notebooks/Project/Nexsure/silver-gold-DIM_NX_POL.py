@@ -213,7 +213,6 @@ JOIN DIM_NX_CARRIER icarr on pi.IssuingCarrierNameId = icarr.NX_CARIER_ID
 JOIN DIM_NX_CARRIER bcarr on pi.BillingCarrierNameId = bcarr.NX_CARIER_ID
 """
 )
-display(finalDataDF)
 
 # COMMAND ----------
 
