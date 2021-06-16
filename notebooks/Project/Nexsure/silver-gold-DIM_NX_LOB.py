@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -73,9 +73,9 @@ print (recordCountFilePath)
 # now = datetime.now() 
 # GoldDimTableName = "DIM_NX_LOB"
 # GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Invoice/Nexsure/DimLineItemLoB/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = "Invoice/Nexsure/DimLineItemLoB/" +now.strftime("%Y") + "/06"
 # sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimLineItemLoB_2021_05_21.parquet"
+# sourceSilverFile = "DimLineItemLoB_2021_06_04.parquet"
 # sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 # badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 # recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
@@ -102,7 +102,7 @@ spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
    sourceSilverDF = spark.read.parquet(sourceSilverFilePath)
-   #display(sourceSilverDF)
+   display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -120,15 +120,22 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_LOB")
 # COMMAND ----------
 
 dummyDataDF = spark.sql(
-f""" 
+  f""" 
 SELECT
--99999 As NX_LOB_KEY,
+-99999 As NX_LINE_ITEM_LOB_KEY,
 -1 As NX_LOB_ID,
+-1 As LOB_TYP,
+-1 As LOB_GRP,
+-1 As LOB,
+-1 As MSTR_LOB,
+-1 As PREM_FLG,
+-1 As INV_LINE_ITM_TYP,
+-1 As PACKGE_TOTL_FLG,
 '{ BatchId }' AS ETL_BATCH_ID,
-'{ WorkFlowId }' AS ETL_WRKFLW_ID,
+'{ WorkFlowId }' AS ETL_WORKFLOW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
-FROM DIM_NX_LOB e LIMIT 1
+FROM DIM_NX_LOB LIMIT 1
 """
 )
 
@@ -138,13 +145,17 @@ FROM DIM_NX_LOB e LIMIT 1
 finalDataDF = spark.sql(
 f"""
 SELECT
-LineItemLOBKey As NX_LOB_KEY,
+LineItemLOBKey As NX_LINE_ITEM_LOB_KEY,
 LOBID As NX_LOB_ID,
 LOBType As LOB_TYP,
 LOBGroup As LOB_GRP,
 LOB As LOB,
+'None' As MSTR_LOB,
+InvoiceLineItemType As INV_LINE_ITM_TYP,
+PremiumFlag As PREM_FLG,
+PackageTotalFlag As PACKGE_TOTL_FLG,
 '{ BatchId }' AS ETL_BATCH_ID,
-'{ WorkFlowId}' AS ETL_WRKFLW_ID,
+'{ WorkFlowId}' AS ETL_WORKFLOW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_NX_LOB
@@ -175,8 +186,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
