@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -28,7 +28,7 @@ dbutils.widgets.removeAll()
 # Set the path for Silver layer for Nexsure
 
 now = datetime.now() 
-#sourceSilverPath = "Reference/Nexsure/DimDate/2021/05"
+#sourceSilverPath = "Reference/Nexsure/DimDate/2021/06"
 sourceSilverFolderPath = "Invoice/Nexsure/DimInvoiceInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
@@ -67,13 +67,13 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-# now = datetime.now() 
-# GoldDimTableName = "Dim_NX_Inv"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Invoice/Nexsure/DimInvoiceInfo/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimInvoiceInfo_2021_05_21.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+now = datetime.now() 
+GoldDimTableName = "Dim_NX_Inv"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+sourceSilverPath = "Invoice/Nexsure/DimInvoiceInfo/" +now.strftime("%Y") + "/06"
+sourceSilverPath = SilverContainerPath + sourceSilverPath
+sourceSilverFile = "DimInvoiceInfo_2021_06_04.parquet"
+sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 # badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 # recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 # BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
@@ -84,7 +84,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_Inv"
+# MAGIC lazy val GoldDimTableName = "Dim_NX_Inv"
 
 # COMMAND ----------
 
@@ -108,7 +108,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
+  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
