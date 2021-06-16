@@ -195,7 +195,6 @@ JOIN DIM_NX_ORG o on pi.OrgStructureKey = o.NX_ORG_KEY
 JOIN DIM_NX_CLIENT c on pi.ClientKey = c.NX_CLIENT_KEY
 """
 )
-display(finalDataDF)
 
 # COMMAND ----------
 
