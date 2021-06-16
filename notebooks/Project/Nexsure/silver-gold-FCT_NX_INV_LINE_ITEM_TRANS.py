@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -33,14 +33,17 @@ dbutils.widgets.text("TableName", "","")
 GoldFactTableName = dbutils.widgets.get("TableName")
 
 #sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/05"
+#FactInvoiceLineItem table
 sourceSilverFolderPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/" + now.strftime("%m")
-#sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/" + "05"
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
-
 sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
-#sourceSilverFile = "FactInvoiceLineItem_" + now.strftime("%Y") +"_"+ "05" + "_21.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+
+#FactPolicyInfo table
+factPInfoSourceSilverFolderPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
+factPInfoSourceSilverPath = SilverContainerPath + factPInfoSourceSilverFolderPath
+factPInfoSourceSilverFile = "FactPolicyInfo_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
+factPInfoSourceSilverFilePath = factPInfoSourceSilverPath + "/" + factPInfoSourceSilverFile
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
@@ -72,7 +75,7 @@ print (recordCountFilePath)
 
 # Temporary cell - DELETE
 # now = datetime.now() 
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 # sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
 # sourceSilverPath = SilverContainerPath + sourceSilverPath
 # sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
@@ -82,12 +85,13 @@ print (recordCountFilePath)
 # BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 # WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/06/FactInvoiceLineItem_2021_06_04.parquet"
+factPInfoSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 
 # COMMAND ----------
 
@@ -115,6 +119,27 @@ except:
 # COMMAND ----------
 
 sourceSilverDF.createOrReplaceTempView("FCT_NX_INV_LINE_ITEM_TRANS")
+
+# COMMAND ----------
+
+# Read source file
+spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
+try:
+ 
+  factPInfoSourceSilverDF = spark.read.parquet(factPInfoSourceSilverFilePath)
+  #display(factPInfoSourceSilverDF)
+except:
+  # Log the error message
+  errorDF = spark.createDataFrame([
+    (GoldFactTableName,now,factPInfoSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
+  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
+  # Write the recon record to SQL DB
+  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
+  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + factPInfoSourceSilverFilePath}}})  
+
+# COMMAND ----------
+
+factPInfoSourceSilverDF.createOrReplaceTempView("FCT_POL_INFO")
 
 # COMMAND ----------
 
@@ -214,6 +239,14 @@ dtDF.createOrReplaceTempView("DIM_NX_DATE")
 
 # COMMAND ----------
 
+pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB]) pollob"
+polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(empDF)
+# Register table so it is accessible via SQL Context
+polDF.createOrReplaceTempView("DIM_NX_POL_LOB")
+
+# COMMAND ----------
+
 # Get final set of records
 finalDataDF = spark.sql(
 f""" 
@@ -224,27 +257,27 @@ GLPeriodKey as GL_PRD_KEY ,
 DateBookedKey as DT_BOKD_KEY  ,
 EffectiveDateKey as EFF_DT_KEY ,
 InvoiceKey as INV_KEY  ,
-LineItemLoBKey as LOB_KEY  ,
-PolicyKey as POLICY_KEY  ,
-ClientKey as CLIENT_KEY  ,
-InvoiceLineItemEntityKey as INV_LINE_ITEM_ENTY_KEY ,
+fact.LineItemLoBKey as LOB_KEY  ,
+fact.PolicyKey as POLICY_KEY  ,
+fact.ClientKey as CLIENT_KEY  ,
+fact.InvoiceLineItemEntityKey as INV_LINE_ITEM_ENTY_KEY ,
 RateTypeKey as RATE_TYPE_KEY  ,
-CommissionableTaxableKey as COMM_TAX_KEY ,
+fact.CommissionableTaxableKey as COMM_TAX_KEY ,
 ProductionResponsibilityKey as PRD_RESP_KEY  ,
 CreatedByEmployeeKey as CRETD_BY_EMP_KEY  ,
 BasisAmt as BASIS_AMT  ,
 DueAmt as DUE_AMT  ,
 AppliedRate as APPLIED_RATE  ,
 ProductionAmt as PRD_AMT  ,
-ProductionCreditPct as PRD_CREDIT_PCT  ,
+fact.ProductionCreditPct as PRD_CREDIT_PCT  ,
 InternalID as INT_ID  ,
 BKFactTable as BK_FACT_TABLE  ,
-InsertAuditKey as SRC_AUD_INS_KEY  ,
-UpdateAuditKey as SRC_AUD_UPD_KEY,
-ParentCarrierKey as PARNT_CARIER_KEY  ,
-BillingCarrierKey as BLLNG_CARIER_KEY  ,
-IssuingCarrierKey as ISSNG_CARIER_KEY  ,
-OrgStructureKey as ORG_KEY  ,
+fact.InsertAuditKey as SRC_AUDT_INS_KEY  ,
+fact.UpdateAuditKey as SRC_AUDT_UPD_KEY,
+fact.ParentCarrierKey as PARNT_CARIER_KEY  ,
+fact.BillingCarrierKey as BLLNG_CARIER_KEY  ,
+fact.IssuingCarrierKey as ISSNG_CARIER_KEY  ,
+fact.OrgStructureKey as ORG_KEY  ,
 coalesce(SURR_RESP_ID,0) as SURR_RESP_ID  ,
 SURR_RATE_ID as SURR_RATE_ID ,
 SURR_ORG_ID as SURR_ORG_ID  ,
@@ -255,28 +288,30 @@ SURR_EMP_ID as SURR_EMP_ID,
 SURR_LINE_ITEM_ID as SURR_LINE_ITEM_ID  ,
 SURR_COMM_TAX_ID as SURR_COMM_TAX_ID  ,
 coalesce(SURR_CLIENT_ID,0) as SURR_CLIENT_ID  ,
-coalesce(BCarr.SURR_CARIER_ID, 0) as SURR_CARIER_ID  ,
+coalesce(ICarr.SURR_CARIER_ID, 0) as SURR_ISSNG_CARIER_ID ,
+coalesce(BCarr.SURR_CARIER_ID, 0) as SURR_BLLNG_CARIER_ID ,
 SURR_DATE_ID as	SURR_DATE_ID  ,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM FCT_NX_INV_LINE_ITEM_TRANS fact
-LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.CARIER_KEY = fact.BillingCarrierKey
-LEFT JOIN DIM_NX_CARRIER ICarr on ICarr.CARIER_KEY = fact.IssuingCarrierKey
-LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ProductionResponsibilityKey = Rsp.RESPBLTY_KEY
-LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.POLICY_KEY
-LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.CLIENT_KEY
-LEFT JOIN DIM_NX_LOB LOB on fact.LineItemLoBKey = LOB.LOB_KEY
+LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.NX_CARIER_KEY = fact.BillingCarrierKey
+LEFT JOIN DIM_NX_CARRIER ICarr on ICarr.NX_CARIER_KEY = fact.IssuingCarrierKey
+LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ProductionResponsibilityKey = Rsp.NX_RESPBLTY_KEY
+LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.NX_POLICY_KEY
+LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.NX_CLIENT_KEY
+LEFT JOIN DIM_NX_LOB LOB on fact.LineItemLoBKey = LOB.NX_LINE_ITEM_LOB_KEY
 JOIN DIM_NX_DATE dt on fact.DateBookedKey = dt.DT_KEY
-JOIN DIM_NX_INV inv on fact.InvoiceKey = inv.INV_KEY
-JOIN DIM_NX_EMP emp on fact.CreatedByEmployeeKey = emp.EMP_KEY
-JOIN DIM_NX_RATE_TYPE Rtp on fact.RateTypeKey = Rtp.RATE_TYP_KEY
-JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.ORG_KEY
-JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.INV_LINE_ITM_ENTY_KEY
-JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.COMM_TAX_KEY
+JOIN DIM_NX_INV inv on fact.InvoiceKey = inv.NX_INV_KEY
+JOIN DIM_NX_EMP emp on fact.CreatedByEmployeeKey = emp.NX_EMP_KEY
+JOIN DIM_NX_RATE_TYPE Rtp on fact.RateTypeKey = Rtp.NX_RATE_TYP_KEY
+JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.NX_ORG_KEY
+JOIN DIM_NX_INV_LINE_ITEM_ENTITY ILItm on fact.InvoiceLineItemEntityKey = ILItm.NX_INV_LINE_ITM_ENTY_KEY
+JOIN DIM_NX_COMM_TAX Comm on fact.CommissionableTaxableKey = Comm.NX_COMM_TAX_KEY
 """
 )
+#display(finalDataDF)
 
 # COMMAND ----------
 
@@ -310,9 +345,31 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
+# MAGIC %scala
+# MAGIC // Disable Constraints for Fact table
+# MAGIC lazy val GoldFactTableNameComplete = finalTableSchema + "." + GoldFactTableName
+# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
+# MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val sql = "ALTER TABLE " + GoldFactTableNameComplete + " NOCHECK CONSTRAINT ALL";
+# MAGIC stmt.execute(sql)
+# MAGIC connection.close()
+
+# COMMAND ----------
+
 # Load the records to final table
 GoldFactTableNameComplete = finalTableSchema + "." + GoldFactTableName
 finalDataDF.write.jdbc(url=Url, table=GoldFactTableNameComplete, mode="append")
+
+# COMMAND ----------
+
+# MAGIC %scala
+# MAGIC // Enable Constraints for Fact table
+# MAGIC lazy val GoldFactTableNameComplete = finalTableSchema + "." + GoldFactTableName
+# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
+# MAGIC lazy val stmt = connection.createStatement()
+# MAGIC lazy val sql = "ALTER TABLE " + GoldFactTableNameComplete + " WITH CHECK CHECK CONSTRAINT ALL";
+# MAGIC stmt.execute(sql)
+# MAGIC connection.close()
 
 # COMMAND ----------
 
