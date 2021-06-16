@@ -7,7 +7,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# Setup a connection to ADLS  
+# Setup a connection to ADLS 
 spark.conf.set(
   ADLSConnectionURI,
   ADLSConnectionKey
@@ -135,7 +135,6 @@ SELECT
 ,-1 As ACTV_FLG
 ,-1 As CARIER_BEGIN_DT
 ,-1 As NX_LST_MOD_DT
-,-1 As TXT_AMB_NUM
 ,-1 As NAIC_CMPNY_NUM
 ,-1 As AMB_NUM
 ,-1 As AMB_CMPNY_NAME
@@ -143,9 +142,6 @@ SELECT
 ,-1 As AMB_PARNT_NAME
 ,-1 As AMB_ULTMT_PARNT_NUM
 ,-1 As AMB_ULTMT_PARNT_NAME
-,-1 As AMB_ULTMT_PARNT_NAME_PREV
-,-1 As AMB_ULTMT_PARNT_NAME_DT_CHNGD
-,-1 As BUSSINES_TYP
 ,-1 As DESCRIPTION
 ,-1 As STRT_DT
 ,-1 As END_DT
@@ -183,7 +179,6 @@ SELECT
 ,e.EntityActiveFlag As ACTV_FLG
 ,e.ClientBeginDate As CARIER_BEGIN_DT
 ,e.LastModified As NX_LST_MOD_DT
-,-1 As TXT_AMB_NUM -- Replace this with AMB column
 ,-1 As NAIC_CMPNY_NUM -- Replace this with AMB column
 ,-1 As AMB_NUM -- Replace this with AMB column
 ,-1 As AMB_CMPNY_NAME -- Replace this with AMB column
@@ -191,9 +186,6 @@ SELECT
 ,-1 As AMB_PARNT_NAME -- Replace this with AMB column
 ,-1 As AMB_ULTMT_PARNT_NUM -- Replace this with AMB column
 ,-1 As AMB_ULTMT_PARNT_NAME -- Replace this with AMB column
-,-1 As AMB_ULTMT_PARNT_NAME_PREV -- Replace this with AMB column
-,-1 As AMB_ULTMT_PARNT_NAME_DT_CHNGD -- Replace this with AMB column
-,e.OnlineBusinessInd As BUSSINES_TYP
 ,e.EntityDescription As DESCRIPTION
 ,e.RowStartDate As STRT_DT
 ,e.RowEndDate As END_DT
@@ -233,8 +225,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
@@ -256,3 +248,6 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
+
+# COMMAND ----------
+
