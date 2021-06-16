@@ -122,28 +122,7 @@ sourceSilverDF.createOrReplaceTempView("FCT_NX_INV_LINE_ITEM_TRANS")
 
 # COMMAND ----------
 
-# Read source file
-spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
-try:
- 
-  factPInfoSourceSilverDF = spark.read.parquet(factPInfoSourceSilverFilePath)
-  #display(factPInfoSourceSilverDF)
-except:
-  # Log the error message
-  errorDF = spark.createDataFrame([
-    (GoldFactTableName,now,factPInfoSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
-  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
-  # Write the recon record to SQL DB
-  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + factPInfoSourceSilverFilePath}}})  
-
-# COMMAND ----------
-
-factPInfoSourceSilverDF.createOrReplaceTempView("FCT_POL_INFO")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_NX_CARRIER]) carrier"
+pushdown_query = "(select * from [dbo].[DIM_NX_CARRIER] where NX_CARIER_KEY <> -1) carrier"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -151,7 +130,7 @@ carrierDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
+pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT] where NX_CLIENT_KEY <> -1) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(clientDF)
 # Register table so it is accessible via SQL Context
@@ -159,7 +138,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_COMM_TAX]) commtax"
+pushdown_query = "(select * from [dbo].[DIM_NX_COMM_TAX] where NX_COMM_TAX_KEY <> -1) commtax"
 commtaxDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(commtaxDF)
 # Register table so it is accessible via SQL Context
@@ -167,7 +146,7 @@ commtaxDF.createOrReplaceTempView("DIM_NX_COMM_TAX")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_INV]) inv"
+pushdown_query = "(select * from [dbo].[DIM_NX_INV] where NX_INV_KEY <> -1) inv"
 invDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(invDF)
 # Register table so it is accessible via SQL Context
@@ -175,7 +154,7 @@ invDF.createOrReplaceTempView("DIM_NX_INV")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_INV_LINE_ITEM_ENTITY]) invlnitment"
+pushdown_query = "(select * from [dbo].[DIM_NX_INV_LINE_ITEM_ENTITY] where NX_INV_LINE_ITM_ENTY_KEY <> -1) invlnitment"
 invlnitmentDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(invlnitmentDF)
 # Register table so it is accessible via SQL Context
@@ -183,7 +162,7 @@ invlnitmentDF.createOrReplaceTempView("DIM_NX_INV_LINE_ITEM_ENTITY")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_LOB]) lob"
+pushdown_query = "(select * from [dbo].[DIM_NX_LOB] where NX_LINE_ITEM_LOB_KEY <> -1) lob"
 lobDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(lobDF)
 # Register table so it is accessible via SQL Context
@@ -191,7 +170,7 @@ lobDF.createOrReplaceTempView("DIM_NX_LOB")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_ORG] where NX_ORG_KEY <> -1) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(orgDF)
 # Register table so it is accessible via SQL Context
@@ -199,7 +178,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_RATE_TYPE]) ratetype"
+pushdown_query = "(select * from [dbo].[DIM_NX_RATE_TYPE] where NX_RATE_TYP_KEY <> -1) ratetype"
 ratetypeDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(ratetypeDF)
 # Register table so it is accessible via SQL Context
@@ -207,7 +186,7 @@ ratetypeDF.createOrReplaceTempView("DIM_NX_RATE_TYPE")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_RESPONSIBILITY]) resp"
+pushdown_query = "(select * from [dbo].[DIM_NX_RESPONSIBILITY] where NX_RESPBLTY_KEY <> -1) resp"
 respDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(respDF)
 # Register table so it is accessible via SQL Context
@@ -215,7 +194,7 @@ respDF.createOrReplaceTempView("DIM_NX_RESPONSIBILITY")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_EMP]) emp"
+pushdown_query = "(select * from [dbo].[DIM_NX_EMP] where NX_EMP_KEY <> -1) emp"
 empDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(empDF)
 # Register table so it is accessible via SQL Context
@@ -223,7 +202,7 @@ empDF.createOrReplaceTempView("DIM_NX_EMP")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL]) pol"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL] where NX_POLICY_KEY <> -1) pol"
 polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(empDF)
 # Register table so it is accessible via SQL Context
@@ -231,19 +210,11 @@ polDF.createOrReplaceTempView("DIM_NX_POL")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_DATE]) date"
+pushdown_query = "(select * from [dbo].[DIM_NX_DATE] where DT_KEY <> -1) date"
 dtDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(empDF)
 # Register table so it is accessible via SQL Context
 dtDF.createOrReplaceTempView("DIM_NX_DATE")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB]) pollob"
-polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(empDF)
-# Register table so it is accessible via SQL Context
-polDF.createOrReplaceTempView("DIM_NX_POL_LOB")
 
 # COMMAND ----------
 
@@ -296,8 +267,8 @@ SURR_DATE_ID as	SURR_DATE_ID  ,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM FCT_NX_INV_LINE_ITEM_TRANS fact
-LEFT JOIN DIM_NX_CARRIER BCarr on BCarr.NX_CARIER_KEY = fact.BillingCarrierKey
-LEFT JOIN DIM_NX_CARRIER ICarr on ICarr.NX_CARIER_KEY = fact.IssuingCarrierKey
+LEFT JOIN DIM_NX_CARRIER BCarr on fact.BillingCarrierKey = BCarr.NX_CARIER_KEY
+LEFT JOIN DIM_NX_CARRIER ICarr on fact.IssuingCarrierKey = ICarr.NX_CARIER_KEY
 LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ProductionResponsibilityKey = Rsp.NX_RESPBLTY_KEY
 LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.NX_POLICY_KEY
 LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.NX_CLIENT_KEY
