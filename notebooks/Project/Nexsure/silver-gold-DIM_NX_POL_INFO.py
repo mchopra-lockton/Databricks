@@ -118,7 +118,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_POL_INFO")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
+pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT] where NX_CLIENT_KEY <> -1) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -126,7 +126,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_ORG] where NX_ORG_KEY <> -1) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -134,7 +134,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB]) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB] where NX_POL_LOB_KEY <> -1) org"
 polLOBDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -142,7 +142,7 @@ polLOBDF.createOrReplaceTempView("DIM_NX_POL_LOB")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL]) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL] where NX_POLICY_KEY <> -1) org"
 polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
