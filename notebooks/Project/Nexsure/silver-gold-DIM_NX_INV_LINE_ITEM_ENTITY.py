@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -64,8 +64,8 @@ print (recordCountFilePath)
 
 # Temporary cell - DELETE
 # now = datetime.now() 
-# GoldDimTableName = "DIM_NX_INV_LINE_ITEM_ENTITY"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+GoldDimTableName = "DIM_NX_INV_LINE_ITEM_ENTITY"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 # sourceSilverPath = "Invoice/Nexsure/DimInvoiceLineItemEntity/" +now.strftime("%Y") + "/05"
 # sourceSilverPath = SilverContainerPath + sourceSilverPath
 # sourceSilverFile = "DimInvoiceLineItemEntity_2021_05_21.parquet"
@@ -80,7 +80,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "DIM_NX_INV_LINE_ITEM_ENTITY"
+# MAGIC lazy val GoldDimTableName = "DIM_NX_INV_LINE_ITEM_ENTITY"
 
 # COMMAND ----------
 
@@ -116,8 +116,11 @@ dummyDataDF = spark.sql(
 f""" 
 SELECT
 -99999 as NX_INV_LINE_ITM_ENTY_KEY,
--1 as DB_SRC_KEY,
--1 as SRC_AUDT_KEY,
+-99999 as NX_ENTITY_ID,
+'None' as ENTITY_TYPE,
+'None' as ENTITY_NAME,
+-99999 as DB_SRC_KEY,
+-99999 as SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
@@ -132,6 +135,9 @@ finalDataDF = spark.sql(
 f"""
 SELECT
 InvoiceLineItemEntityKey as NX_INV_LINE_ITM_ENTY_KEY,
+EntityNameId as NX_ENTITY_ID,
+EntityType as ENTITY_TYPE,
+EntityName as ENTITY_NAME,
 SourceTable as SRC_TABLE,
 PayeeType as PAYEE_TYP,
 Description as ENTITY_DESC,
@@ -144,6 +150,7 @@ CURRENT_TIMESTAMP() as ETL_CREATED_DT,
 CURRENT_TIMESTAMP() as ETL_UPDATED_DT 
 FROM DIM_NX_INV_LINE_ITEM_ENTITY 
 """)
+#display(finalDataDF)
 
 # COMMAND ----------
 
@@ -171,7 +178,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
 # MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //truncate policy table
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
