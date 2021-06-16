@@ -102,7 +102,6 @@ spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
    sourceSilverDF = spark.read.parquet(sourceSilverFilePath)
-   display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
