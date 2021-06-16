@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC  %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -28,7 +28,7 @@ dbutils.widgets.removeAll()
 # Set the path for Silver layer for Nexsu
 
 now = datetime.now() 
-#sourceSilverPath = "Person/Nexsure/DimEmployee/2021/05"
+#sourceSilverPath = "Person/Nexsure/DimEmployee/2021/06"
 sourceSilverFolderPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
@@ -70,23 +70,23 @@ print (recordCountFilePath)
 
 # Temporary cell - DELETE
 # now = datetime.now() 
-# GoldDimTableName = "Dim_NX_Emp"
+# GoldDimTableName = "DIM_NX_EMP"
 # GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/05"
+# sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/06"
 # sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimEmployee_2021_05_21.parquet"
+# sourceSilverFile = "DimEmployee_2021_06_04.parquet"
 # sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 # badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 # recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 # BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 # WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/06/DimEmployee_2021_06_04.parquet"
+# sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/06/DimEmployee_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_Emp"
+# MAGIC //  lazy val GoldDimTableName = "Dim_NX_Emp"
 
 # COMMAND ----------
 
@@ -96,12 +96,13 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
 
 # COMMAND ----------
 
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/06/DimEmployee_2021_06_04.parquet" 
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
    sourceSilverDF = spark.read.parquet(sourceSilverFilePath)
-   #display(sourceSilverDF)
+   display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -121,10 +122,26 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_EMP")
 dummyDataDF = spark.sql(
   f""" 
 SELECT
--99999	As NX_EMP_KEY,
+-99999 As NX_EMP_KEY,
+-1 As NX_EMP_ID,
+-1 As ACTV_FLG,
+-1 EMP_FIRST_NAME,
+-1 As EMP_LST_NAME,
+-1 As EMP_TITLE,
 -1 As FULL_NAME,
 -1 As SSN,
 -1 As DRVR_LCNSE_NO,
+-1 As ADDR_LINE_1,
+-1 As ADDR_LINE_2,
+-1 As CITY,
+-1 As ZIP,
+-1 As LOC_NAME,
+-1 As EMAIL,
+-1 As STATE_LCNSD,
+-1 As MARITL_STATUS,
+-1 As GENDER,
+current_timestamp() As EMP_DOB,
+-1 AS STATE, 
 -1 As DB_SRC_KEY,
 -1 As SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
@@ -141,12 +158,28 @@ FROM DIM_NX_EMP LIMIT 1
 finalDataDF = spark.sql(
 f""" 
 SELECT
-EmployeeKey	As NX_EMP_KEY,
-EmployeeFullName As FULL_NAME,
-EmployeeSSN As SSN,
-DriversLicenseNumber As DRVR_LCNSE_NO,
-DBSourceKey As DB_SRC_KEY,
-AuditKey As SRC_AUDT_KEY,
+EmployeeKey AS NX_EMP_KEY,
+EmployeeID AS NX_EMP_ID,
+EmployeeFullName AS FULL_NAME,
+EmployeeSSN AS SSN,
+DriversLicenseNumber AS DRVR_LCNSE_NO,
+EmployeeFirstName AS EMP_FIRST_NAME,
+EmployeeLastName AS EMP_LST_NAME,
+EmployeeTitle AS EMP_TITLE,
+EmployeeBirthDate AS EMP_DOB,
+StateLicensed AS STATE_LCNSD,
+MaritalStatus AS MARITL_STATUS,
+Gender AS GENDER,
+CurrentActiveStatus AS ACTV_FLG,
+EmployeeAddressLine1 AS ADDR_LINE_1,
+EmployeeAddressLine2 AS ADDR_LINE_2,
+EmployeeAddressCity AS CITY,
+EmployeeAddressState AS STATE,
+EmployeeAddressZip AS ZIP,
+EmployeeLocationName AS LOC_NAME,
+EmployeeEmail AS EMAIL,
+DBSourceKey AS DB_SRC_KEY,
+AuditKey AS SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
@@ -180,8 +213,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
