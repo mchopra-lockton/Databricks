@@ -102,7 +102,6 @@ spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
    sourceSilverDF = spark.read.parquet(sourceSilverFilePath)
-   display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -118,7 +117,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_POL")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
+pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT] where NX_CLIENT_KEY <> -1) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -126,7 +125,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CARRIER]) carrier"
+pushdown_query = "(select * from [dbo].[DIM_NX_CARRIER] where NX_CARIER_ID <> -1) carrier"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
