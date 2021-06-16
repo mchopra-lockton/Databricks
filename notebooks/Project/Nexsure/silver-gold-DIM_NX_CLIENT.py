@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -36,7 +36,7 @@ sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 #sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_25.parquet"
-#sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + "05" + "_25.parquet"
+#sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + "06" + "_04.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 
 dbutils.widgets.text("TableName", "","")
@@ -70,13 +70,13 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-# now = datetime.now() 
-# GoldDimTableName = "DIM_NX_CLIENT"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimEntity_2021_06_04.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+now = datetime.now() 
+GoldDimTableName = "DIM_NX_CLIENT"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/06"
+sourceSilverPath = SilverContainerPath + sourceSilverPath
+sourceSilverFile = "DimEntity_2021_06_04.parquet"
+sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 # badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 # recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 # BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
@@ -87,7 +87,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_CLIENT"
+# MAGIC  lazy val GoldDimTableName = "Dim_NX_CLIENT"
 
 # COMMAND ----------
 
@@ -121,15 +121,39 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_CLIENT")
 dummyDataDF = spark.sql(
 f""" 
 SELECT
--99999 as NX_CLIENT_KEY,
--1 as MSTR_CLIENT_KEY,
--1  as NX_CLIENT_ID,
--1 as DB_SRC_KEY,
--1 as SRC_AUDT_KEY,
-'{ BatchId }' AS ETL_BATCH_ID,
-'{ WorkFlowId }' AS ETL_WRKFLW_ID,
-current_timestamp() AS ETL_CREATED_DT,
-current_timestamp() AS ETL_UPDATED_DT
+-99999 as NX_CLIENT_KEY
+,-1 as MSTR_CLIENT_KEY
+,-1 as NX_CLIENT_ID
+,-1 As CLIENT_NAME
+,-1 As CLIENT_TYP
+,-1 As FEIN
+,-1 As ADDR_LINE_1
+,-1 As ADDR_LINE_2
+,-1 As CITY
+,-1 As STATE
+,-1 As ZIP
+,-1 As COUNTRY
+,-1 As PRIM_NAICS_CD
+,-1 As PRIM_NAICS_DESC
+,-1 As PRIM_PNC_EFF_DT
+,-1 As PNC_RELNSHIP
+,-1 As PRIM_PNC_PRODCR
+,-1 As PRIM_PNC_SERV_LEAD
+,-1 As CLNT_SNCE_FRM
+,-1 As CLNT_SNCE_TO
+,-1 As PRIM_CONTCT_NAME
+,-1 As PRIM_CONTCT_EMAIL
+,-1 As PRIM_CONTCT_PHN
+,-1 As NX_LST_MOD_DT
+,-1 As URL
+,-1 As ACTV_FLG
+,-1 As CARIER_CLAS
+,-1 As DB_SRC_KEY
+,-1 As SRC_AUDT_KEY
+,'{ BatchId }' AS ETL_BATCH_ID
+,'{ WorkFlowId }' AS ETL_WRKFLW_ID
+,current_timestamp() AS ETL_CREATED_DT
+,current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_NX_CLIENT e LIMIT 1
 """
 )
@@ -142,10 +166,32 @@ finalDataDF = spark.sql(
 f""" 
 SELECT
 EntityKey as NX_CLIENT_KEY,
-1 as MSTR_CLIENT_KEY,  -- To be replaced later
+1 As MSTR_CLIENT_KEY,
 EntityID  as NX_CLIENT_ID,
 EntityName as CLIENT_NAME,
 EntityType as CLIENT_TYP,
+FEIN as FEIN,
+EntityAddressLine1 as ADDR_LINE_1,
+EntityAddressLine2 as ADDR_LINE_2,
+EntityAddressCity as CITY,
+EntityAddressState as STATE,
+EntityAddressZip as ZIP,
+EntityAddressCountry as COUNTRY,
+PrimaryNaicsSic As PRIM_NAICS_CD,
+'None' As PRIM_NAICS_DESC,
+'1800-01-01' As PRIM_PNC_EFF_DT,
+-1 As PNC_RELNSHIP,
+-1 As PRIM_PNC_PRODCR,
+-1 As PRIM_PNC_SERV_LEAD,
+-1 As CLNT_SNCE_FRM,
+-1 As CLNT_SNCE_TO,
+PrimaryContactName as PRIM_CONTCT_NAME,
+PrimaryContactEmail as PRIM_CONTCT_EMAIL,
+PrimaryContactPhone as PRIM_CONTCT_PHN,
+LastModified as NX_LST_MOD_DT,
+EntityURL as URL,
+EntityActiveFlag as ACTV_FLG,
+EntityClass as CARIER_CLAS,
 DBSourceKey as DB_SRC_KEY,
 AuditKey as SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
@@ -183,8 +229,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
