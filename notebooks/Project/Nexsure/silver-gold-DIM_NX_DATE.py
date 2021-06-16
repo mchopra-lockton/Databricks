@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -70,9 +70,9 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell - DELETE
-# now = datetime.now() 
-# GoldDimTableName = "DIM_NX_DATE"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+now = datetime.now() 
+GoldDimTableName = "DIM_NX_DATE"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
 # sourceSilverPath = "Reference/Nexsure/DimDate/" +now.strftime("%Y") + "/05"
 # sourceSilverPath = SilverContainerPath + sourceSilverPath
 # sourceSilverFile = "DimDate_2021_05_21.parquet"
@@ -87,7 +87,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 
 # MAGIC %scala
 # MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_DATE"
+# MAGIC lazy val GoldDimTableName = "Dim_NX_DATE"
 
 # COMMAND ----------
 
@@ -179,8 +179,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
