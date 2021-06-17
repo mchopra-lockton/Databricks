@@ -67,7 +67,7 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
   now = datetime.now() 
   GoldDimTableName = "DIM_NX_ORG"
   GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
@@ -85,7 +85,7 @@ if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == "")
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldFactTableName == "") {
+# MAGIC if (GoldDimTableName == "") {
 # MAGIC   val GoldDimTableName = "Dim_NX_ORG"
 # MAGIC }
 
