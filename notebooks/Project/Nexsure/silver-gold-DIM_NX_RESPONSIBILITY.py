@@ -82,8 +82,8 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
 
 # MAGIC %scala
 # MAGIC # Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-# MAGIC lazy val GoldDimTableName = "DIM_NX_RESPONSIBILITY"
+# MAGIC if (GoldDimTableName == "") {
+# MAGIC   lazy val GoldDimTableName = "DIM_NX_RESPONSIBILITY"
 # MAGIC }
 
 # COMMAND ----------
