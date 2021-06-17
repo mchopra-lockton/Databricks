@@ -76,12 +76,12 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
   recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
   BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
   WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimResponsibility/2021/06/DimResponsibility_2021_06_04.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimResponsibility/2021/06/DimResponsibility_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC # Temporary cell to run manually - DELETE
+# MAGIC // Temporary cell to run manually - DELETE
 # MAGIC if (GoldDimTableName == "") {
 # MAGIC   lazy val GoldDimTableName = "DIM_NX_RESPONSIBILITY"
 # MAGIC }
