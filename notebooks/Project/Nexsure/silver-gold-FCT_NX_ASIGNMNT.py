@@ -72,26 +72,27 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-
-# Temporary cell - DELETE
-# now = datetime.now() 
-GoldFactTableName = "FCT_NX_ASIGNMNT"
-# sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-# badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
-# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/2021/06/FactAssignment_2021_06_10.parquet"
-#factPInfoSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
+# Temporary cell to run manually - DELETE
+if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+  now = datetime.now() 
+  GoldFactTableName = "FCT_NX_ASIGNMNT"
+  sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
+  sourceSilverPath = SilverContainerPath + sourceSilverPath
+  sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
+  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+  badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/2021/06/FactAssignment_2021_06_10.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldFactTableName = "FCT_NX_ASIGNMNT"
+# MAGIC // Temporary cell to run manually - DELETE
+# MAGIC if (GoldFactTableName == "") {
+# MAGIC   lazy val GoldFactTableName = "FCT_NX_ASIGNMNT"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -121,7 +122,7 @@ sourceSilverDF.createOrReplaceTempView("FCT_NX_ASIGNMNT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client where NX_CLIENT_KEY <> -1"
+pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(clientDF)
 # Register table so it is accessible via SQL Context
@@ -129,7 +130,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL]) pol where NX_POLICY_KEY <> -1"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL]) pol"
 commtaxDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(commtaxDF)
 # Register table so it is accessible via SQL Context
@@ -137,7 +138,7 @@ commtaxDF.createOrReplaceTempView("DIM_NX_POL")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_EMP]) emp where NX_EMP_KEY <> -1"
+pushdown_query = "(select * from [dbo].[DIM_NX_EMP]) emp"
 invDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(invDF)
 # Register table so it is accessible via SQL Context
@@ -145,7 +146,7 @@ invDF.createOrReplaceTempView("DIM_NX_EMP")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org where NX_ORG_KEY <> -1"
+pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(orgDF)
 # Register table so it is accessible via SQL Context
@@ -153,7 +154,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_RESPONSIBILITY]) resp where NX_RESPBLTY_KEY <> -1"
+pushdown_query = "(select * from [dbo].[DIM_NX_RESPONSIBILITY]) resp"
 respDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(respDF)
 # Register table so it is accessible via SQL Context
@@ -192,7 +193,6 @@ JOIN DIM_NX_EMP emp on fact.AssignmentEmployeeKey = emp.NX_EMP_KEY
 JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.NX_ORG_KEY
 """
 )
-display(finalDataDF)
 
 # COMMAND ----------
 
