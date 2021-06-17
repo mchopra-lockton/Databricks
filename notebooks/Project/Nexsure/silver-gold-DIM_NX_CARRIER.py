@@ -83,7 +83,7 @@ if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == "")
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
 # MAGIC if (GoldFactTableName == "") {
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_Carrier"
+# MAGIC   lazy val GoldDimTableName = "Dim_NX_Carrier"
 # MAGIC }  
 
 # COMMAND ----------
