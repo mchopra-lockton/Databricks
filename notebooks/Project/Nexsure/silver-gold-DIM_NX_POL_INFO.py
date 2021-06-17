@@ -69,25 +69,28 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "DIM_NX_POL_INFO"
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-sourceSilverPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/06"
-sourceSilverPath = SilverContainerPath + sourceSilverPath
-sourceSilverFile = "FactPolicyInfo_2021_06_04.parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
+# Temporary cell to run manually - DELETE
+if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+  now = datetime.now() 
+  GoldDimTableName = "DIM_NX_POL_INFO"
+  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+  sourceSilverPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/06"
+  sourceSilverPath = SilverContainerPath + sourceSilverPath
+  sourceSilverFile = "FactPolicyInfo_2021_06_04.parquet"
+  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC // Temporary cell - DELETE
+# MAGIC // Temporary cell to run manually - DELETE
+# MAGIC if (GoldFactTableName == "") {
 # MAGIC  lazy val GoldDimTableName = "Dim_NX_POL_INFO"
+# MAGIC }  
 
 # COMMAND ----------
 
@@ -118,7 +121,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_POL_INFO")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT] where NX_CLIENT_KEY <> -1) client"
+pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -126,7 +129,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_ORG] where NX_ORG_KEY <> -1) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -134,7 +137,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB] where NX_POL_LOB_KEY <> -1) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL_LOB]) org"
 polLOBDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
@@ -142,7 +145,7 @@ polLOBDF.createOrReplaceTempView("DIM_NX_POL_LOB")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_POL] where NX_POLICY_KEY <> -1) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_POL]) org"
 polDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(carrierDF)
 # Register table so it is accessible via SQL Context
