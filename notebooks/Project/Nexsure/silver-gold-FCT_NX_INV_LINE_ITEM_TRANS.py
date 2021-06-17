@@ -43,7 +43,6 @@ sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 factPInfoSourceSilverFolderPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
 factPInfoSourceSilverPath = SilverContainerPath + factPInfoSourceSilverFolderPath
 factPInfoSourceSilverFile = "FactPolicyInfo_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-factPInfoSourceSilverFilePath = factPInfoSourceSilverPath + "/" + factPInfoSourceSilverFile
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
@@ -72,26 +71,27 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-
-# Temporary cell - DELETE
-# now = datetime.now() 
-GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-# badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
-# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/06/FactInvoiceLineItem_2021_06_04.parquet"
-factPInfoSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
+# Temporary cell to run manually - DELETE
+if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+  now = datetime.now() 
+  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+  sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
+  sourceSilverPath = SilverContainerPath + sourceSilverPath
+  sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
+  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+  badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/06/FactInvoiceLineItem_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC // Temporary cell - DELETE
+# MAGIC // Temporary cell to run manually - DELETE
+# MAGIC if (GoldFactTableName == "") {
 # MAGIC lazy val GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC }  
 
 # COMMAND ----------
 
@@ -138,7 +138,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_COMM_TAX] where NX_COMM_TAX_KEY <> -1) commtax"
+pushdown_query = "(select * from [dbo].[DIM_NX_COMM_TAX]) commtax"
 commtaxDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(commtaxDF)
 # Register table so it is accessible via SQL Context
@@ -146,7 +146,7 @@ commtaxDF.createOrReplaceTempView("DIM_NX_COMM_TAX")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_INV] where NX_INV_KEY <> -1) inv"
+pushdown_query = "(select * from [dbo].[DIM_NX_INV]) inv"
 invDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(invDF)
 # Register table so it is accessible via SQL Context
@@ -154,7 +154,7 @@ invDF.createOrReplaceTempView("DIM_NX_INV")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_INV_LINE_ITEM_ENTITY] where NX_INV_LINE_ITM_ENTY_KEY <> -1) invlnitment"
+pushdown_query = "(select * from [dbo].[DIM_NX_INV_LINE_ITEM_ENTITY]) invlnitment"
 invlnitmentDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(invlnitmentDF)
 # Register table so it is accessible via SQL Context
@@ -170,7 +170,7 @@ lobDF.createOrReplaceTempView("DIM_NX_LOB")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_ORG] where NX_ORG_KEY <> -1) org"
+pushdown_query = "(select * from [dbo].[DIM_NX_ORG]) org"
 orgDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(orgDF)
 # Register table so it is accessible via SQL Context
@@ -178,7 +178,7 @@ orgDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_RATE_TYPE] where NX_RATE_TYP_KEY <> -1) ratetype"
+pushdown_query = "(select * from [dbo].[DIM_NX_RATE_TYPE]) ratetype"
 ratetypeDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(ratetypeDF)
 # Register table so it is accessible via SQL Context
@@ -194,7 +194,7 @@ respDF.createOrReplaceTempView("DIM_NX_RESPONSIBILITY")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_EMP] where NX_EMP_KEY <> -1) emp"
+pushdown_query = "(select * from [dbo].[DIM_NX_EMP]) emp"
 empDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(empDF)
 # Register table so it is accessible via SQL Context
@@ -210,7 +210,7 @@ polDF.createOrReplaceTempView("DIM_NX_POL")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_NX_DATE] where DT_KEY <> -1) date"
+pushdown_query = "(select * from [dbo].[DIM_NX_DATE]) date"
 dtDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(empDF)
 # Register table so it is accessible via SQL Context
