@@ -76,7 +76,7 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
   recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
   BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
   WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/06/DimEntity_2021_06_04.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/06/DimEntity_2021_06_04.parquet"
 
 # COMMAND ----------
 
@@ -114,6 +114,26 @@ except:
 
 # Register table so it is accessible via SQL Context
 sourceSilverDF.createOrReplaceTempView("DIM_NX_CARRIER")
+
+# COMMAND ----------
+
+pushdown_query = "(select * from [dbo].[BP_NX_REF_CARRIER_MAPPING]) client"
+carriermapDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(clientDF)
+# Register table so it is accessible via SQL Context
+carriermapDF.createOrReplaceTempView("BP_NX_REF_CARRIER_MAPPING")
+
+# COMMAND ----------
+
+pushdown_query = "(select * from [dbo].[BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING]) client"
+ambDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(clientDF)
+# Register table so it is accessible via SQL Context
+ambDF.createOrReplaceTempView("BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING")
+
+# COMMAND ----------
+
+ambDF.count()
 
 # COMMAND ----------
 
@@ -182,26 +202,41 @@ SELECT
 ,e.EntityActiveFlag As ACTV_FLG
 ,e.ClientBeginDate As CARIER_BEGIN_DT
 ,e.LastModified As NX_LST_MOD_DT
-,-1 As NAIC_CMPNY_NUM -- Replace this with AMB column
-,-1 As AMB_NUM -- Replace this with AMB column
-,-1 As AMB_CMPNY_NAME -- Replace this with AMB column
-,-1 As AMB_PARNT_NUM -- Replace this with AMB column
-,-1 As AMB_PARNT_NAME -- Replace this with AMB column
-,-1 As AMB_ULTMT_PARNT_NUM -- Replace this with AMB column
-,-1 As AMB_ULTMT_PARNT_NAME -- Replace this with AMB column
+,NAIC_CMPNY_NUM As NAIC_CMPNY_NUM -- Replace this with AMB column
+,AMB_NUM As AMB_NUM -- Replace this with AMB column
+,AMB_CMPNY_NAME As AMB_CMPNY_NAME -- Replace this with AMB column
+,PARNT_NUM As AMB_PARNT_NUM -- Replace this with AMB column
+,PARNT_NAME As AMB_PARNT_NAME -- Replace this with AMB column
+,AMB_ULTMTE_PARNT_NUM As AMB_ULTMT_PARNT_NUM -- Replace this with AMB column
+,AMB_ULTMTE_PARNT_NAME As AMB_ULTMT_PARNT_NAME -- Replace this with AMB column
+,CNTRY_OF_DOMCLE as CNTRY_OF_DOMICILE
+,BST_FIN_STRNGTH_RTNG_ALPH as BSTS_FINCL_STRNGTH_RATNG_ALPHA
 ,e.EntityDescription As DESCRIPTION
 ,e.RowStartDate As STRT_DT
 ,e.RowEndDate As END_DT
 ,e.DBSourceKey As DB_SRC_KEY
-,e.AuditKey As SRC_AUDT_KEY
+,e.AuditKey As SRC_AUDT_KEY,
+VLD_PREM as VALID_PREMIMUM,
+BCO_CATG as BCO_CATG,
+PREF_WHOL_SALER as PREF_WHOLESALER,
+PREF_GRP as PREF_GRP,
+PS_BCO_CD as PS_BCO_CD,
+PS_BCO_DESC as PS_BCO_DESC,
+PS_CARIER_STATUS as PS_CARIER_STATUS
 ,'{ BatchId }' AS ETL_BATCH_ID
 ,'{ WorkFlowId }' AS ETL_WRKFLW_ID
 ,current_timestamp() AS ETL_CREATED_DT
 ,current_timestamp() AS ETL_UPDATED_DT
 from DIM_NX_CARRIER e
+JOIN BP_NX_REF_CARRIER_MAPPING mc on e.EntityID = mc.CARIER_SRC_ID and mc.SRC = 'NX' and mc.END_DT is null
+LEFT JOIN BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING amb on amb.AMB_NUM = mc.AM_BST_NUM
 where (e.EntityClass = 'Carrier' or e.EntityKey = -1)
 """
 )
+
+# COMMAND ----------
+
+finalDataDF.count()
 
 # COMMAND ----------
 
@@ -251,6 +286,3 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
-
-# COMMAND ----------
-
