@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -28,7 +28,7 @@ dbutils.widgets.removeAll()
 # Set the path for Silver layer for Nexsure
 
 now = datetime.now() 
-#sourceSilverPath = "Reference/Nexsure/DimDate/2021/05"
+#sourceSilverPath = "Reference/Nexsure/DimDate/2021/06"
 sourceSilverFolderPath = "Invoice/Nexsure/DimCommissionableTaxable/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
@@ -66,25 +66,28 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-# now = datetime.now() 
-# GoldDimTableName = "Dim_NX_Comm_Tax"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Invoice/Nexsure/DimCommissionableTaxable/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimCommissionableTaxable_2021_05_21.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/DimCommissionableTaxable/2021/06/DimCommissionableTaxable_2021_06_04.parquet"
+# Temporary cell to run manually - DELETE
+if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+  now = datetime.now() 
+  GoldDimTableName = "Dim_NX_Comm_Tax"
+  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+  sourceSilverPath = "Invoice/Nexsure/DimCommissionableTaxable/" +now.strftime("%Y") + "/06"
+  sourceSilverPath = SilverContainerPath + sourceSilverPath
+  sourceSilverFile = "DimCommissionableTaxable_2021_06_04.parquet"
+  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/DimCommissionableTaxable/2021/06/DimCommissionableTaxable_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC // lazy val GoldDimTableName = "Dim_NX_Comm_Tax"
+# MAGIC // Temporary cell to run manually - DELETE
+# MAGIC if (GoldDimTableName == "") {
+# MAGIC   lazy val GoldDimTableName = "Dim_NX_Comm_Tax"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -118,9 +121,10 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_COMM_TAX")
 
 dummyDataDF = spark.sql(
   f"""
-SELECT -99999 as NX_COMM_TAX_KEY,
+SELECT  -99999 as NX_COMM_TAX_KEY,
       -1 as COMM_TAX_TYPE,
       -1 as TAXBLE_STATUS,
+      -1 as COMM_TAX_FLG,
       -1 as DB_SRC_KEY,
       -1 SRC_AUDT_KEY,
       '{ BatchId }' AS ETL_BATCH_ID,
@@ -137,6 +141,7 @@ f"""
 SELECT CommissionableTaxableKey as NX_COMM_TAX_KEY,
       CommissionableType as COMM_TAX_TYPE,
       TaxableStatus as TAXBLE_STATUS,
+      TaxableFlag as COMM_TAX_FLG,
       DBSourceKey as DB_SRC_KEY,
       AuditKey as SRC_AUDT_KEY,
       '{ BatchId }' AS ETL_BATCH_ID,
@@ -171,8 +176,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()

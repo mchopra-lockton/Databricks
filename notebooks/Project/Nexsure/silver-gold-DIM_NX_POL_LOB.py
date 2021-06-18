@@ -7,6 +7,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
+# Setup a connection to ADLS
 spark.conf.set(
   ADLSConnectionURI,
   ADLSConnectionKey
@@ -14,6 +15,7 @@ spark.conf.set(
 
 # COMMAND ----------
 
+# Cleanup the widgets
 dbutils.widgets.removeAll()
 
 # COMMAND ----------
@@ -25,25 +27,26 @@ dbutils.widgets.removeAll()
 
 # COMMAND ----------
 
-# Set the path for Silver layer for Nexsu
-
+ # Set the path for Silver layer for Nexsure
+  
 now = datetime.now() 
-#sourceSilverPath = "OrgStructure/Nexsure/DimOrgStructure/2021/05"
-sourceSilverFolderPath = "OrgStructure/Nexsure/DimOrgStructure/" +now.strftime("%Y") + "/" + now.strftime("%m")
+#sourceSilverPath = "Policy/Nexsure/DimPolicyLOB/2021/06"
+sourceSilverFolderPath = "Policy/Nexsure/DimPolicyLOB/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
-sourceSilverFile = "DimOrgStructure_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#sourceSilverFile = "DimOrgStructure_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
+#sourceSilverFile = "DimPolicyLOB_2021_06_04.parquet"
+sourceSilverFile = "DimPolicyLOB_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
+#sourceSilverFile = "DimPolicyLOB_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+
+dbutils.widgets.text("TableName", "","")
+GoldDimTableName = dbutils.widgets.get("TableName")
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
 
 dbutils.widgets.text("WorkFlowId", "","")
 WorkFlowId = dbutils.widgets.get("WorkFlowId")
-
-dbutils.widgets.text("TableName", "","")
-GoldDimTableName = dbutils.widgets.get("TableName")
 
 #Set the file path to log error
 badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
@@ -52,8 +55,8 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_ORG/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_ORG/" + date_time
+#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/DIM_NX_LOB/"
+#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/DIML_NX_LOB/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 
 #Set the file path to log error
@@ -69,25 +72,25 @@ print (recordCountFilePath)
 # Temporary cell to run manually - DELETE
 if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
   now = datetime.now() 
-  GoldDimTableName = "DIM_NX_ORG"
+  GoldDimTableName = "DIM_NX_LOB"
   GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "OrgStructure/Nexsure/DimOrgStructure/" +now.strftime("%Y") + "/06"
+  sourceSilverPath = "Invoice/Nexsure/DimLineItemLoB/" +now.strftime("%Y") + "/06"
   sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "DimOrgStructure_2021_06_04.parquet"
+  sourceSilverFile = "DimLineItemLoB_2021_06_04.parquet"
   sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
   badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
   recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
   BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
   WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Nexsure/DimOrgStructure/2021/06/DimOrgStructure_2021_06_04.parquet"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicyLOB/2021/06/DimPolicyLOB_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
 # MAGIC if (GoldDimTableName == "") {
-# MAGIC   val GoldDimTableName = "Dim_NX_ORG"
-# MAGIC }
+# MAGIC   val GoldDimTableName = "Dim_NX_POL_LOB"
+# MAGIC }  
 
 # COMMAND ----------
 
@@ -97,12 +100,12 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
 
 # COMMAND ----------
 
- # Read source file
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicyLOB/2021/06/DimPolicyLOB_2021_06_04.parquet" 
+# Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
    sourceSilverDF = spark.read.parquet(sourceSilverFilePath)
-   display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -115,69 +118,49 @@ except:
 # COMMAND ----------
 
 # Register table so it is accessible via SQL Context
-sourceSilverDF.createOrReplaceTempView("DIM_NX_ORG")
-#display(sourceSilverDF)
+sourceSilverDF.createOrReplaceTempView("DIM_NX_POL_LOB")
 
 # COMMAND ----------
 
 dummyDataDF = spark.sql(
-f""" 
+  f""" 
 SELECT
--99999 AS NX_ORG_KEY,
--1 As DEPT_NO,
--1 As BRNCH_NO,
--1 As ORG_NO,
--1 As DEPT_NAME,
--1 As BRNCH_NAME,
--1 As REGION_NAME,
--1 As ORG_NAME,
--1 As ENTY_LVL_NAME,
--1 As SERIES,
--1 As BUSS_UNIT,
--1 As BUSS_TYP,
--1 As DEPT_ALIAS,
--1 As DEPT_MSTR_ALIAS,
--1 as DB_SRC_KEY,
--1 as SRC_AUDT_KEY,
+-99999 As NX_POL_LOB_KEY,
+-1 As NX_POL_LOB_ID,
+-1 As FORM_STNDARD,
+-1 As LOB_STATE,
+-1 As LOB_TYP,
+-1 As LOB_GRP,
+-1 As LOB_CD,
+-1 As LOB,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
-FROM DIM_NX_ORG e LIMIT 1
+FROM DIM_NX_POL_LOB LIMIT 1
 """
 )
-#display(dummyDataDF)
 
 # COMMAND ----------
 
 # Get final set of records
 finalDataDF = spark.sql(
-f""" 
+f"""
 SELECT
-OrgStructureKey AS NX_ORG_KEY,
-DepartmentNum As DEPT_NO,
-DepartmentName As DEPT_NAME,
-BranchNum As BRNCH_NO,
-BranchName As BRNCH_NAME,
-RegionName As REGION_NAME,
-OrgNumber As ORG_NO,
-OrgName	As ORG_NAME,
-EntityLevelName	As ENTY_LVL_NAME,
--1 As SERIES,
--1 As BUSS_UNIT,
--1 As BUSS_TYP,
--1 As DEPT_ALIAS,
--1 As DEPT_MSTR_ALIAS,
-DBSourceKey As DB_SRC_KEY,
-AuditKey As SRC_AUDT_KEY,
+PolicyLOBKey As NX_POL_LOB_KEY,
+PolicyLOBID	As NX_POL_LOB_ID,
+FormStandard As FORM_STNDARD,
+PolicyLOBState As LOB_STATE,
+PolicyLOBType As LOB_TYP,
+PolicyLOBGroup As LOB_GRP,
+PolicyLOBCode As LOB_CD,
+PolicyLOB As LOB,
 '{ BatchId }' AS ETL_BATCH_ID,
-'{ WorkFlowId }' AS ETL_WRKFLW_ID,
+'{ WorkFlowId}' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
-FROM DIM_NX_ORG
-"""
-)
-#display(finalDataDF)
+FROM DIM_NX_POL_LOB
+""")
 
 # COMMAND ----------
 

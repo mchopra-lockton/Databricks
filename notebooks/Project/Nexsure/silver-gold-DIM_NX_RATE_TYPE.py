@@ -3,7 +3,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-# MAGIC %run "/Shared/Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -19,7 +19,6 @@ dbutils.widgets.removeAll()
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
 # MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
 
@@ -66,25 +65,28 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-# now = datetime.now() 
-# GoldDimTableName = "DIM_NX_RATE_TYPE"
-# GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-# sourceSilverPath = "Invoice/Nexsure/DimRateType/" +now.strftime("%Y") + "/05"
-# sourceSilverPath = SilverContainerPath + sourceSilverPath
-# sourceSilverFile = "DimRateType_2021_05_25.parquet"
-# sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-# badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-# recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-# BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-# WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/DimRateType/2021/06/DimRateType_2021_06_04.parquet"
+# Temporary cell to run manually - DELETE
+if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+  now = datetime.now() 
+  GoldDimTableName = "DIM_NX_RATE_TYPE"
+  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+  sourceSilverPath = "Invoice/Nexsure/DimRateType/" +now.strftime("%Y") + "/05"
+  sourceSilverPath = SilverContainerPath + sourceSilverPath
+  sourceSilverFile = "DimRateType_2021_05_25.parquet"
+  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/DimRateType/2021/06/DimRateType_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC // val GoldDimTableName = "Dim_NX_RATE_TYPE"
+# MAGIC // Temporary cell to run manually - DELETE
+# MAGIC if (GoldDimTableName == "") {
+# MAGIC  val GoldDimTableName = "Dim_NX_RATE_TYPE"
+# MAGIC }  
 
 # COMMAND ----------
 
@@ -175,8 +177,8 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 # MAGIC // Truncate Fact table and Delete data from Dimension table
 # MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
 # MAGIC lazy val stmt = connection.createStatement()
-# MAGIC lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC stmt.execute(sql_truncate)
+# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
+# MAGIC //stmt.execute(sql_truncate)
 # MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
 # MAGIC stmt.execute(sql)
 # MAGIC connection.close()
