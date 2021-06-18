@@ -6,7 +6,7 @@ now = datetime.now() # current date and time
 
 # COMMAND ----------
 
-# MAGIC %run "./Database Config"
+# MAGIC %run "/Project/Database Config"
 
 # COMMAND ----------
 
@@ -59,7 +59,6 @@ spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
   sourceBronzeDF = spark.read.option('badRecordsPath',badRecordsPath).parquet(sourceBronzeFilePath)  
 #sourceBronzeDF = spark.read.parquet(sourceBronzeFilePath)
-  sourceBronzeDF.count()
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -73,7 +72,7 @@ except:
 
 # Fix the column headers 
 
-sourceBronzeDF = sourceBronzeDF.toDF(*(re.sub(r'[#&()\-\s\']+', '', c) for c in sourceBronzeDF.columns))
+sourceBronzeDF = sourceBronzeDF.toDF(*(re.sub(r'[#&()\-\s\'\[\]=]+', '', c) for c in sourceBronzeDF.columns))
 
 # COMMAND ----------
 
@@ -82,8 +81,18 @@ dt = sourceBronzeDF.dtypes
 columnList = [item[0] for item in dt if item[1].startswith('string')]
 for col_name in sourceBronzeDF.columns:
   if col_name in columnList:
-    sourceBronzeDF = sourceBronzeDF.withColumn(col_name, regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(col_name, '[…• ¢£®°³¼½¾æð]',''),'[‘’´]',"'"),'[–—]','-'),'[ºÓôÖØ]','o'),'[àÁÂÃÄÅ]','a'),'Ç','c'),'[ÈÉêë]','e'),'[íîï]','i'),'Ñ','n'),'ß','B'),'[ùúÜ]','u'),'ý','y'))
-#display(sourceBronzeDF.head(10))
+      sourceBronzeDF = sourceBronzeDF.withColumn(col_name,regexp_replace(col_name, "[…• ¢£®°³¼½¾æð•]",""))
+      sourceBronzeDF = sourceBronzeDF.withColumn(col_name,translate(col_name,"‘’–—´ºàÁÂÃÄÅÇÈÉêëíîïÑÓôÖØßùúÜý","''--'oaaaaaaceeeeiiinooooBuuuy"))      
+
+# COMMAND ----------
+
+# # Fix the data for all columns with datatype as string
+# dt = sourceBronzeDF.dtypes
+# columnList = [item[0] for item in dt if item[1].startswith('string')]
+# for col_name in sourceBronzeDF.columns:
+#   if col_name in columnList:
+#     sourceBronzeDF = sourceBronzeDF.withColumn(col_name, regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(col_name, '[…• ¢£®°³¼½¾æð]',''),'[‘’´]',"'"),'[–—]','-'),'[ºÓôÖØ]','o'),'[àÁÂÃÄÅ]','a'),'Ç','c'),'[ÈÉêë]','e'),'[íîï]','i'),'Ñ','n'),'ß','B'),'[ùúÜ]','u'),'ý','y'))
+# #display(sourceBronzeDF.head(10))
 
 # COMMAND ----------
 
