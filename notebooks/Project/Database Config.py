@@ -8,10 +8,6 @@ BronzeQCContainerPath = "abfss://c360bronzeqc@dlsldpdev01v8nkg988.dfs.core.windo
 reconTable = "dbo.Recon"
 finalTableSchema = "dbo"
 
-replaceFromCharColumn = "[…• ¢£®°³¼½¾æð•]"
-replaceFromCharData = "‘’–—´ºàÁÂÃÄÅÇÈÉêëíîïÑÓôÖØßùúÜý"
-replaceToCharData = "''--'oaaaaaaceeeeiiinooooBuuuy"
-
 #Bad Record File Configuration
 badRecordsRootPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 
@@ -20,15 +16,14 @@ print(IronContainerPath, "\n", BronzeContainerPath,"\n", SilverContainerPath, "\
 # COMMAND ----------
 
 # Get ADLS Connection string from Key Vault
-
 ADLSConnectionURI = "fs.azure.account.key.dlsldpdev01v8nkg988.dfs.core.windows.net"
 ADLSConnectionKey = dbutils.secrets.get(scope = "c360-databricks-secret", key = "adlkey") 
 
 # COMMAND ----------
 
 # Get SQL credentials string from Key Vault
-Hostname = "sqlsv-ldp-dev-01.database.windows.net"
-Database = "sqldb-GoldZone-CAP360-dev"
+Hostname = dbutils.secrets.get(scope = "c360-databricks-secret", key = "SQLHostName")
+Database = dbutils.secrets.get(scope = "c360-databricks-secret", key = "SQLGoldDatabaseName")
 Port = 1433
 UN = 'lockadmin'
 PW = dbutils.secrets.get(scope = "c360-databricks-secret", key = "sqladminpw") 
@@ -38,7 +33,6 @@ connectionProperties = {
   "password" : PW,
   "driver" : "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 }
-#print(Url)
 
 # COMMAND ----------
 
@@ -46,8 +40,17 @@ connectionProperties = {
 # MAGIC // Get SQL credentials string from Key Vault
 # MAGIC import java.util.Properties
 # MAGIC import java.sql.DriverManager
+# MAGIC lazy val Hostname = dbutils.secrets.get(scope = "c360-databricks-secret", key = "SQLHostName")
+# MAGIC lazy val Database = dbutils.secrets.get(scope = "c360-databricks-secret", key = "SQLGoldDatabaseName")
 # MAGIC lazy val finalTableSchema = "dbo"
 # MAGIC lazy val jdbcUsername = "lockadmin"
 # MAGIC lazy val jdbcPassword = dbutils.secrets.get(scope = "c360-databricks-secret", key = "sqladminpw") 
 # MAGIC lazy val driverClass = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-# MAGIC lazy val jdbcUrl = s"jdbc:sqlserver://sqlsv-ldp-dev-01.database.windows.net:1433;database=sqldb-GoldZone-CAP360-dev;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+# MAGIC lazy val jdbcUrl = s"jdbc:sqlserver://$Hostname:1433;database=$Database;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+
+# COMMAND ----------
+
+# Data Quality checks
+replaceFromCharColumn = "[…• ¢£®°³¼½¾æð•]"
+replaceFromCharData = "‘’–—´ºàÁÂÃÄÅÇÈÉêëíîïÑÓôÖØßùúÜý"
+replaceToCharData = "''--'oaaaaaaceeeeiiinooooBuuuy"
