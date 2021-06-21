@@ -67,27 +67,19 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  now = datetime.now() 
-  GoldDimTableName = "DIM_NX_ORG"
-  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "OrgStructure/Nexsure/DimOrgStructure/" +now.strftime("%Y") + "/06"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "DimOrgStructure_2021_06_04.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Nexsure/DimOrgStructure/2021/06/DimOrgStructure_2021_06_04.parquet"
+now = datetime.now() 
+GoldDimTableName = "DIM_NX_ORG"
+badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Nexsure/DimOrgStructure/2021/06/DimOrgStructure_2021_06_04.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
 # MAGIC   val GoldDimTableName = "Dim_NX_ORG"
-# MAGIC }
 
 # COMMAND ----------
 
@@ -120,6 +112,25 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_ORG")
 
 # COMMAND ----------
 
+# Create a dataframe of Org Structure Mapping table
+pushdown_query = "(select OFFICE_BRANCHID,SERIES,BUSINESS_UNIT,BUSINESS_TYPE,REPRTNG_OFC_NAME,BUSS_TYP_GRP from [dbo].[BP_NX_REF_ORG_STR_MAPPING]) orgstrmap"
+orgstrmapDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(clientDF)
+# Register table so it is accessible via SQL Context
+orgstrmapDF.createOrReplaceTempView("BP_NX_REF_ORG_STR_MAPPING")
+
+# COMMAND ----------
+
+# Create a dataframe of Master Dept (Mapping BenefitsDept) table
+# pushdown_query = "(select * from [dbo].[BP_NX_REF_PS_DEPT_MAPPING]) psdepmap"
+pushdown_query = "(SELECT DEPT_ID,BUSINESS_UNIT,DEPT_ALIAS,DEPT_MASTER_ALIAS FROM (SELECT *, row_number() over(PARTITION BY  DEPT_ID,BUSINESS_UNIT ORDER BY Eff_Dt desc) dept_rank FROM [dbo].[BP_NX_REF_PS_DEPT_MAPPING]) AS DeptMap WHERE dept_rank=1) psdepmap"
+psdeptmapDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(clientDF)
+# Register table so it is accessible via SQL Context
+psdeptmapDF.createOrReplaceTempView("BP_NX_REF_PS_DEPT_MAPPING")
+
+# COMMAND ----------
+
 dummyDataDF = spark.sql(
 f""" 
 SELECT
@@ -135,6 +146,8 @@ SELECT
 -1 As SERIES,
 -1 As BUSS_UNIT,
 -1 As BUSS_TYP,
+-1 As REGIONL_OFC_NAME,
+-1 As BUSS_TYP_GRP,
 -1 As DEPT_ALIAS,
 -1 As DEPT_MSTR_ALIAS,
 -1 as DB_SRC_KEY,
@@ -163,21 +176,25 @@ RegionName As REGION_NAME,
 OrgNumber As ORG_NO,
 OrgName	As ORG_NAME,
 EntityLevelName	As ENTY_LVL_NAME,
--1 As SERIES,
--1 As BUSS_UNIT,
--1 As BUSS_TYP,
--1 As DEPT_ALIAS,
--1 As DEPT_MSTR_ALIAS,
+coalesce(orgstrmap.SERIES,0) As SERIES, 
+coalesce(orgstrmap.BUSINESS_UNIT,0) As BUSS_UNIT,
+coalesce(orgstrmap.BUSINESS_TYPE,0) As BUSS_TYP, 
+coalesce(orgstrmap.REPRTNG_OFC_NAME,0) As REGIONL_OFC_NAME,
+coalesce(orgstrmap.BUSS_TYP_GRP,0) As BUSS_TYP_GRP,
+coalesce(psdepmap.DEPT_ALIAS,0) DEPT_ALIAS,
+coalesce(psdepmap.DEPT_MASTER_ALIAS,0) As DEPT_MSTR_ALIAS,
 DBSourceKey As DB_SRC_KEY,
 AuditKey As SRC_AUDT_KEY,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
-FROM DIM_NX_ORG
+FROM DIM_NX_ORG e
+LEFT JOIN BP_NX_REF_ORG_STR_MAPPING orgstrmap ON e.BranchNum = orgstrmap.OFFICE_BRANCHID
+LEFT JOIN BP_NX_REF_PS_DEPT_MAPPING psdepmap ON SUBSTRING(e.DepartmentName,1,4) = psdepmap.DEPT_ID AND orgstrmap.BUSINESS_UNIT = psdepmap.BUSINESS_UNIT
 """
 )
-#display(finalDataDF)
+display(finalDataDF)
 
 # COMMAND ----------
 
