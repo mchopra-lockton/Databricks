@@ -80,7 +80,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 # COMMAND ----------
 
 # Do not proceed if any of the parameters are missing
-if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+if (GoldFactTableName == "" or sourceSilverFilePath == ""):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
 
 # COMMAND ----------
