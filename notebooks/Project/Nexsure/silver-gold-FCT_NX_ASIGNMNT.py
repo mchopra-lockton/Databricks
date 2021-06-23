@@ -75,7 +75,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC   lazy val GoldFactTableName = "FCT_NX_ASIGNMNT"
+# MAGIC lazy val GoldFactTableName = "FCT_NX_ASIGNMNT"
 
 # COMMAND ----------
 
