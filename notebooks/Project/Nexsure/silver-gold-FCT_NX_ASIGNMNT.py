@@ -32,15 +32,8 @@ now = datetime.now()
 dbutils.widgets.text("TableName", "","")
 GoldFactTableName = dbutils.widgets.get("TableName")
 
-#sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/05"
 #FactInvoiceLineItem table
 sourceSilverFilePath = SilverContainerPath + "Person/Nexsure/FactAssignment/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "FactAssignment_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-
-#FactPolicyInfo table
-#factPInfoSourceSilverFolderPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
-#factPInfoSourceSilverPath = SilverContainerPath + factPInfoSourceSilverFolderPath
-#factPInfoSourceSilverFile = "FactPolicyInfo_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#factPInfoSourceSilverFilePath = factPInfoSourceSilverPath + "/" + factPInfoSourceSilverFile
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
