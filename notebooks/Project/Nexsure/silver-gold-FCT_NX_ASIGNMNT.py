@@ -34,10 +34,7 @@ GoldFactTableName = dbutils.widgets.get("TableName")
 
 #sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/05"
 #FactInvoiceLineItem table
-sourceSilverFolderPath = "Person/Nexsure/FactAssignment/" +now.strftime("%Y") + "/" + now.strftime("%m")
-sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
-sourceSilverFile = "FactAssignment_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+sourceSilverFilePath = SilverContainerPath + "Person/Nexsure/FactAssignment/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "FactAssignment_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 
 #FactPolicyInfo table
 #factPInfoSourceSilverFolderPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
@@ -73,26 +70,19 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldFactTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  now = datetime.now() 
-  GoldFactTableName = "FCT_NX_ASIGNMNT"
-  sourceSilverPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/05"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "FactInvoiceLineItem_2021_05_21.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-  badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
-  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/2021/06/FactAssignment_2021_06_10.parquet"
+now = datetime.now() 
+GoldFactTableName = "FCT_NX_ASIGNMNT"
+badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
+recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/2021/06/FactAssignment_2021_06_18.parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldFactTableName == "") {
 # MAGIC   lazy val GoldFactTableName = "FCT_NX_ASIGNMNT"
-# MAGIC }
 
 # COMMAND ----------
 
@@ -177,22 +167,26 @@ DBSourceKey as DB_SRC_KEY,
 InsertAuditKey as SRC_AUDT_INS_KEY,
 UpdateAuditKey as SRC_AUDT_UPD_KEY,
 coalesce(SURR_RESP_ID,0) as RESPNSBLTY_ID,
-SURR_ORG_ID as ORG_ID  ,
+coalesce(SURR_ORG_ID,0) as ORG_ID  ,
 coalesce(SURR_POL_ID,0) as POL_ID,
-SURR_EMP_ID as EMP_ID,  
+coalesce(SURR_EMP_ID,0) as EMP_ID,  
 coalesce(SURR_CLIENT_ID,0) as CLNT_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WORKFLOW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM FCT_NX_ASIGNMNT fact
-JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ResponsibilityKey = Rsp.NX_RESPBLTY_KEY
-JOIN DIM_NX_POL pol on fact.PolicyKey = pol.NX_POLICY_KEY
-JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.NX_CLIENT_KEY
-JOIN DIM_NX_EMP emp on fact.AssignmentEmployeeKey = emp.NX_EMP_KEY
-JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.NX_ORG_KEY
+LEFT JOIN DIM_NX_RESPONSIBILITY Rsp on fact.ResponsibilityKey = Rsp.NX_RESPBLTY_KEY
+LEFT JOIN DIM_NX_POL pol on fact.PolicyKey = pol.NX_POLICY_KEY
+LEFT JOIN DIM_NX_CLIENT cl on fact.ClientKey = cl.NX_CLIENT_KEY
+LEFT JOIN DIM_NX_EMP emp on fact.AssignmentEmployeeKey = emp.NX_EMP_KEY
+LEFT JOIN DIM_NX_ORG Org on fact.OrgStructureKey = Org.NX_ORG_KEY
 """
 )
+
+# COMMAND ----------
+
+sourceSilverDF.count()
 
 # COMMAND ----------
 
