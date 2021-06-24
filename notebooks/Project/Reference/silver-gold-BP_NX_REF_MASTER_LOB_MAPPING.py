@@ -50,8 +50,6 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Carrier/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Carrier/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 
 print ("Param -\'Variables':")
@@ -64,26 +62,19 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  now = datetime.now() 
-  GoldDimTableName = "BP_NX_REF_MASTER_LOB_MAPPING"
-  sourceSilverPath = "Business/MDS2/Mapping_LOB/" +now.strftime("%Y") + "/05"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "Mapping_LOB_2021_06_15.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Business/MDS2/Mapping_LOB/2021/06/Mapping_LOB_2021_06_15.parquet"
+now = datetime.now() 
+GoldDimTableName = "BP_NX_REF_MASTER_LOB_MAPPING"
+badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Business/MDS2/Mapping_LOB/" + yymmManual + "/Mapping_LOB_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
-# MAGIC   lazy val GoldDimTableName = "BP_NX_REF_MASTER_LOB_MAPPING"
-# MAGIC }  
+# MAGIC lazy val GoldDimTableName = "BP_NX_REF_MASTER_LOB_MAPPING"
 
 # COMMAND ----------
 
