@@ -7,6 +7,8 @@ GoldContainerPath = "abfss://c360gold@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 BronzeQCContainerPath = "abfss://c360bronzeqc@dlsldpdev01v8nkg988.dfs.core.windows.net/"
 reconTable = "dbo.Recon"
 finalTableSchema = "dbo"
+yymmManual = "2021/06"
+yyyymmddManual = "2021_06_24"
 
 #Bad Record File Configuration
 badRecordsRootPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/"
