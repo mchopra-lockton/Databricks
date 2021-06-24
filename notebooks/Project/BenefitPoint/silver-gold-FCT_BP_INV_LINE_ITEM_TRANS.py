@@ -76,8 +76,8 @@ GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
 #POSsourceSilverFilePath = POSsourceSilverPath + "/" + POSsourceSilverFile
 #badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
 #recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-#BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-#WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 POSsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTING_RECORD_AllRecs/" + yymmManual + "/vw_POSTING_RECORD_AllRecs_" + yyyymmddManual + ".parquet"
 
 SPLsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTED_SPLIT_AllRecs/" + yymmManual + "/vw_POSTED_SPLIT_AllRecs_" + yyyymmddManual + ".parquet"
@@ -373,55 +373,68 @@ CASE WHEN se.PLAN_ID IS NOT NULL THEN se.PLAN_ID ELSE ADHOC_PRODUCT_ID END as PO
 IS_POSTED as IS_POSTD,
 PREMIUM_AMOUNT as PREM_AMT,
 TAM_TRANSACTION_TYPE_ID as TAM_TRNS_TYPE_ID,
-STATEMENT_SPLIT_ID as INV_SPLIT_ID,
+coalesce(STATEMENT_SPLIT_ID,0) as INV_SPLIT_ID,
 ADHOC_PRODUCT_ID as ADHC_POL_ID,
 LAST_POSTED_DATE as LAST_POSTD_DATE,--statement
-paunion.BILLING_CARRIER_ID as BILING_CARIER_ID,
-paunion.CARRIER_ID as CARIER_ID,
-BOR_CLIENT_ID as BOR_CLINT_ID,
-BROKERAGE_DEPARTMENT_ID as BRKERGE_DEPT_ID,
-paunion.BROKERAGE_OFFICE_ID as BRNCH_ID,
-CLIENT_ID as CLNT_ID,
-PLAN_TYPE_ID as LOB_ID,
-SALES_LEAD_ID as SALES_LEAD_ID,
+coalesce(paunionPlan.BILLING_CARRIER_ID,paunionAdhoc.BILLING_CARRIER_ID,0) as BILING_CARIER_ID,
+coalesce(paunionPlan.CARRIER_ID,paunionAdhoc.CARRIER_ID,0) as CARIER_ID,
+coalesce(paunionPlan.BOR_CLIENT_ID,paunionAdhoc.BOR_CLIENT_ID,0) as BOR_CLINT_ID,
+coalesce(paunionPlan.BROKERAGE_DEPARTMENT_ID,paunionAdhoc.BROKERAGE_DEPARTMENT_ID,0) as BRKERGE_DEPT_ID,
+coalesce(paunionPlan.BROKERAGE_OFFICE_ID,paunionAdhoc.BROKERAGE_OFFICE_ID,0) as BRNCH_ID,
+coalesce(paunionPlan.CLIENT_ID,paunionAdhoc.CLIENT_ID,0) as CLNT_ID,
+coalesce(paunionPlan.PLAN_TYPE_ID,paunionAdhoc.PLAN_TYPE_ID,0) as LOB_ID,
+coalesce(paunionPlan.SALES_LEAD_ID,paunionAdhoc.SALES_LEAD_ID,0) as SALES_LEAD_ID,
 --add surrogate Ids here
-coalesce(SURR_ORG_ID,0) As SURR_ORG_ID ,
---SURR_BROKR_ID ,
-coalesce(icarr.SURR_CARIER_ID,0) As SURR_ISSNG_CARIER_ID,
-coalesce(bcarr.SURR_CARIER_ID,0) As SURR_BLLNG_CARIER_ID,
-coalesce(SURR_CLNT_ID,0) As SURR_CLNT_ID,
---SURR_CNTCT_ID ,
+coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,-1) As SURR_ORG_ID ,
+-1 As SURR_BROKR_ID ,
+coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,-1) As SURR_ISSNG_CARIER_ID,
+coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,-1) As SURR_BLLNG_CARIER_ID,
+coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,-1) As SURR_CLNT_ID,
+-1 As SURR_CNTCT_ID ,
 coalesce(SURR_INV_ID,0) As SURR_INV_ID,
-coalesce(pol.SURR_POL_ID,0) As SURR_POL_ID,
+coalesce(polPlan.SURR_POL_ID,polAdhoc.SURR_POL_ID,-1) As SURR_POL_ID,
 SURR_PRODCR_CD_ID,
-coalesce(SURR_LOB_ID,0) As SURR_LOB_ID ,
+coalesce(lobPlan.SURR_LOB_ID,lobAdhoc.SURR_LOB_ID,-1) As SURR_LOB_ID ,
 --pr.POSTING_RECORD_ID as BP_POSTING_REC_ID,
 '' as PRODUCER_CODE_ID,
-SERVICE_LEAD_ID as SERVICE_LEAD_ID,
-s.CHECK_NUMBER as CHECK_NUMBER, --statement
-s.CHECK_DATE as CHECK_DT, --statement
+coalesce(paunionPlan.SERVICE_LEAD_ID,paunionAdhoc.SERVICE_LEAD_ID,0) as SERVICE_LEAD_ID,
+coalesce(s.CHECK_NUMBER,0) as CHECK_NUMBER, --statement
+coalesce(s.CHECK_DATE,'0') as CHECK_DT, --statement
 VOID_IND as VOID_INDICATOR,
-VOIDED_RECORD_ID as BP_VOID_POSTING_REC_ID,
+coalesce(VOIDED_RECORD_ID,0) as BP_VOID_POSTING_REC_ID,
 '' as ACPT_TOLERANCE_IND,
 APPLY_TO_DATE as APLY_TO_DT,
-SAGITTA_TRANSACTION_CODE_DESC as SAGITTA_TRANS_CODE_DESC,
-TAM_TRANSACTION_TYPE_DESC as TAM_TRANS_TYPE_DESC,
-NUMBER_OF_LIVES as NO_OF_LIVES,
-s.RowBeginDate as SRC_ROW_BEGIN_DT,
-s.RowEndDate as SRC_ROW_END_DT
+coalesce(SAGITTA_TRANSACTION_CODE_DESC,0) as SAGITTA_TRANS_CODE_DESC,
+coalesce(TAM_TRANSACTION_TYPE_DESC,0) as TAM_TRANS_TYPE_DESC,
+coalesce(NUMBER_OF_LIVES,0) as NO_OF_LIVES,
+coalesce(s.RowBeginDate,'0') as SRC_ROW_BEGIN_DT,
+coalesce(s.RowEndDate,'0') as SRC_ROW_END_DT,
+'{ BatchId }' AS ETL_BATCH_ID,
+'{ WorkFlowId }' AS ETL_WRKFLW_ID,
+current_timestamp() AS ETL_CREATED_DT,
+current_timestamp() AS ETL_UPDATED_DT
 FROM POSTED_SPLIT ps
 JOIN POSTING_RECORD pr on ps.POSTING_RECORD_ID = pr.POSTING_RECORD_ID
 JOIN STATEMENT_ENTRY se on pr.STATEMENT_ENTRY_ID = se.STATEMENT_ENTRY_ID
 JOIN STATEMENT s on se.STATEMENT_ID = s.STATEMENT_ID
 JOIN DIM_BP_PRODUCER_CODE pc on ps.PAYEE_ID = pc.PRODCR_CD_ID
-LEFT JOIN DIM_BP_POL pol on (pol.POL_ID = se.PLAN_ID or pol.POL_ID = se.ADHOC_PRODUCT_ID)
-LEFT JOIN PLAN_ADHOC_PRODUCT paunion on (paunion.PLAN_ADHOC = se.PLAN_ID or paunion.PLAN_ADHOC = se.ADHOC_PRODUCT_ID)
-LEFT JOIN DIM_BP_CLIENT c on paunion.CLIENT_ID = c.CLNT_ID
-LEFT JOIN DIM_BP_ORG org on c.OWNR_OFC_ID = org.BRNCH_NUM
-LEFT JOIN DIM_BP_CARRIER icarr on paunion.CARRIER_ID = icarr.CARIER_ID
-LEFT JOIN DIM_BP_CARRIER bcarr on paunion.BILLING_CARRIER_ID = bcarr.CARIER_ID
+--LEFT JOIN DIM_BP_POL pol on (pol.POL_ID = se.PLAN_ID or pol.POL_ID = se.ADHOC_PRODUCT_ID)
+LEFT JOIN DIM_BP_POL polPlan on polPlan.POL_ID = se.PLAN_ID
+LEFT JOIN DIM_BP_POL polAdhoc on polAdhoc.POL_ID = se.ADHOC_PRODUCT_ID
+--LEFT JOIN PLAN_ADHOC_PRODUCT paunion on (paunion.PLAN_ADHOC = se.PLAN_ID or paunion.PLAN_ADHOC = se.ADHOC_PRODUCT_ID)
+LEFT JOIN PLAN_ADHOC_PRODUCT paunionPlan on paunionPlan.PLAN_ADHOC = se.PLAN_ID
+LEFT JOIN PLAN_ADHOC_PRODUCT paunionAdhoc on paunionAdhoc.PLAN_ADHOC = se.ADHOC_PRODUCT_ID
+LEFT JOIN DIM_BP_CLIENT cPlan on paunionPlan.CLIENT_ID = cPlan.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT cAdhoc on paunionAdhoc.CLIENT_ID = cAdhoc.CLNT_ID
+LEFT JOIN DIM_BP_ORG orgPlan on cPlan.OWNR_OFC_ID = orgPlan.BRNCH_NUM
+LEFT JOIN DIM_BP_ORG orgAdhoc on cAdhoc.OWNR_OFC_ID = orgAdhoc.BRNCH_NUM
+LEFT JOIN DIM_BP_CARRIER icarrPlan on paunionPlan.CARRIER_ID = icarrPlan.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER icarrAdhoc on paunionAdhoc.CARRIER_ID = icarrAdhoc.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER bcarrPlan on paunionPlan.BILLING_CARRIER_ID = bcarrPlan.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER bcarrAdhoc on paunionAdhoc.BILLING_CARRIER_ID = bcarrAdhoc.CARIER_ID
 LEFT JOIN DIM_BP_INV inv on se.STATEMENT_ID = inv.INV_ID
-LEFT JOIN DIM_BP_LOB lob on paunion.PLAN_TYPE_ID = lob.BP_LOB_ID
+LEFT JOIN DIM_BP_LOB lobPlan on paunionPlan.PLAN_TYPE_ID = lobPlan.BP_LOB_ID
+LEFT JOIN DIM_BP_LOB lobAdhoc on paunionAdhoc.PLAN_TYPE_ID = lobAdhoc.BP_LOB_ID
 -- where ps.POSTING_RECORD_ID = 411685;
 """
 )
@@ -431,6 +444,10 @@ LEFT JOIN DIM_BP_LOB lob on paunion.PLAN_TYPE_ID = lob.BP_LOB_ID
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
+
+# COMMAND ----------
+
+finalDataDF.count()
 
 # COMMAND ----------
 
