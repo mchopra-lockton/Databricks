@@ -33,22 +33,14 @@ dbutils.widgets.removeAll()
 
 now = datetime.now() 
 
-sourceSilverFolderPath = "Policy/Benefits/vw_PLAN_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m")
-sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
-sourceSilverFile = "vw_PLAN_AllPlans_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+sourceSilverFilePath = SilverContainerPath + "Policy/Benefits/vw_PLAN_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "vw_PLAN_AllPlans_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 
 #adhoc product file
-adhocSourceSilverFolderPath = "Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m")
-adhocSourceSilverPath = SilverContainerPath + adhocSourceSilverFolderPath
-adhocSourceSilverFile = "vw_ADHOC_PRODUCT_AllPlans_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-adhocSourceSilverFilePath = adhocSourceSilverPath + "/" + adhocSourceSilverFile
+adhocSourceSilverFilePath = SilverContainerPath + "Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "vw_ADHOC_PRODUCT_AllPlans_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 
 #plan type file
-planTypeSourceSilverFolderPath = "Policy/Benefits/vw_PLAN_TYPE_AllTypes/" +now.strftime("%Y") + "/" + now.strftime("%m")
-planTypeSourceSilverPath = SilverContainerPath + planTypeSourceSilverFolderPath
-planTypeSourceSilverFile = "vw_PLAN_TYPE_AllTypes_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-planTypeSourceSilverFilePath = planTypeSourceSilverPath + "/" + planTypeSourceSilverFile
+planTypeSourceSilverFilePath = SilverContainerPath + "Policy/Benefits/vw_PLAN_TYPE_AllTypes/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "vw_PLAN_TYPE_AllTypes_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
+
 
 dbutils.widgets.text("TableName", "","")
 GoldDimTableName = dbutils.widgets.get("TableName")
@@ -66,12 +58,7 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-
-#Set the file path to log error
-#badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
 
 print ("Param -\'Variables':")
 print (sourceSilverFilePath)
@@ -83,19 +70,10 @@ print (recordCountFilePath)
 # Temporary cell - DELETE
 now = datetime.now() 
 GoldDimTableName = "DIM_BP_POL"
-#GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
-
-#badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-#recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-#BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-#WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_AllPlans/" + yymmManual + "/vw_PLAN_AllPlans_" + yyyymmddManual + ".parquet"
 adhocSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" + yymmManual + "/vw_ADHOC_PRODUCT_AllPlans_" + yyyymmddManual + ".parquet"
-planTypeSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_TYPE_AllTypes/" + yymmManual + "/vw_PLAN_TYPE_AllTypes_" + yyyymmddManual + ".parquet"
 print(sourceSilverFilePath)
 print(adhocSourceSilverFilePath)
-print(planTypeSourceSilverFilePath)
-
 
 # COMMAND ----------
 
@@ -106,7 +84,7 @@ print(planTypeSourceSilverFilePath)
 # COMMAND ----------
 
 # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == "" or adhocSourceSilverPath =="" or adhocSourceSilverFile=="" or planTypeSourceSilverPath =="" or planTypeSourceSilverFile == ""):
+if (GoldDimTableName == "" or sourceSilverFilePath == "" or adhocSourceSilverFilePath == ""):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
 
 # COMMAND ----------
@@ -145,26 +123,8 @@ except:
 
 # COMMAND ----------
 
-# Read  office source file
-spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
-try:
- 
-  planTypeSourceSilverDF = spark.read.parquet(planTypeSourceSilverFilePath)
-  #display(planTypeSourceSilverDF)
-except:
-  # Log the error message
-  errorDF = spark.createDataFrame([
-    (GoldDimTableName,now,planTypeSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
-  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
-  # Write the recon record to SQL DB
-  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + planTypeSourceSilverFilePath}}}) 
-
-# COMMAND ----------
-
 sourceSilverDF.createOrReplaceTempView("DIM_BP_PLAN")
 adhocSourceSilverDF.createOrReplaceTempView("DIM_BP_ADHOC_PRODUCT")
-planTypeSourceSilverDF.createOrReplaceTempView("DIM_BP_PLAN_TYPE")
 
 # COMMAND ----------
 
@@ -206,7 +166,8 @@ UNION_IND,
 VOLUNTARY_IND,
 LAST_MODIFIED_DATE,
 BILLING_CARRIER_ID,
-CARRIER_ID
+CARRIER_ID,
+'Plan' As BP_SOURCE_TABLE
 FROM DIM_BP_PLAN 
 UNION 
 SELECT
@@ -244,15 +205,33 @@ UNION_IND,
 VOLUNTARY_IND,
 LAST_MODIFIED_DATE,
 BILLING_CARRIER_ID,
-CARRIER_ID
+CARRIER_ID,
+'Adhoc Product' As BP_SOURCE_TABLE
 FROM DIM_BP_ADHOC_PRODUCT
 """
 )
-#display(unionDataDF)
+unionDataDF.createOrReplaceTempView("DIM_BP_PLAN_ADHOC_PRODUCT")
 
 # COMMAND ----------
 
-unionDataDF.createOrReplaceTempView("DIM_BP_PLAN_ADHOC_PRODUCT")
+pushdown_query = "(select * from [dbo].[DIM_BP_CARRIER]) carrier"
+carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# Register table so it is accessible via SQL Context
+carrierDF.createOrReplaceTempView("DIM_BP_CARRIER")
+
+# COMMAND ----------
+
+pushdown_query = "(select CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
+carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# Register table so it is accessible via SQL Context
+carrierDF.createOrReplaceTempView("DIM_BP_CLIENT")
+
+# COMMAND ----------
+
+pushdown_query = "(select * from [dbo].[DIM_BP_LOB]) carrier"
+carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# Register table so it is accessible via SQL Context
+carrierDF.createOrReplaceTempView("DIM_BP_LOB")
 
 # COMMAND ----------
 
@@ -288,6 +267,10 @@ SELECT
 'None' as PREMM_PAY_FEQ_DEC,
 '1800-01-01' as BP_LAST_MODIFIED_DT,
 'None' as BP_SOURCE_TABLE,
+0 As SURR_ISUNG_CARIER_ID,
+0 As SURR_BILNG_CARIER_ID,
+0 As SURR_CLNT_ID,
+0 As SURR_LOB_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
@@ -340,16 +323,23 @@ PREMIUM_PAY_FREQ_DESC as PREMM_PAY_FEQ_DEC,
 UNION_IND as UNION_IND,
 VOLUNTARY_IND as VOLUNTARY_IND,
 LAST_MODIFIED_DATE as BP_LAST_MODIFIED_DT,
-'' as BP_SOURCE_TABLE,
+BP_SOURCE_TABLE,
 BILLING_CARRIER_ID As BILLING_CARRIER_ID,
 CARRIER_ID As ISSUING_CARRIER_ID,
+coalesce(icarr.SURR_CARIER_ID,0) As SURR_ISUNG_CARIER_ID,
+coalesce(bcarr.SURR_CARIER_ID,0) As SURR_BILNG_CARIER_ID,
+coalesce(client.SURR_CLNT_ID,0) As SURR_CLNT_ID,
+coalesce(lob.SURR_LOB_ID,0) As SURR_LOB_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_BP_PLAN_ADHOC_PRODUCT pa
-LEFT JOIN DIM_BP_PLAN_TYPE pt on pa.PLAN_TYPE_ID = pt.PLAN_TYPE_ID
---JOIN DIM_BP_PLAN p on pa.PLAN_ID = p.PLAN_ID
+LEFT JOIN DIM_BP_CARRIER icarr on pa.CARRIER_ID = icarr.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER bcarr on pa.BILLING_CARRIER_ID = bcarr.CARIER_ID
+LEFT JOIN DIM_BP_CLIENT client on pa.CLIENT_ID = client.CLNT_ID
+LEFT JOIN DIM_BP_LOB lob on pa.PLAN_TYPE_ID = lob.BP_LOB_ID
+--JOIN DIM_BP_LOB p on pa.PLAN_ID = p.PLAN_ID
 """
 )
 #display(finalDataDF)
