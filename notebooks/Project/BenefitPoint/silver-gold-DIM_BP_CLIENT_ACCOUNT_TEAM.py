@@ -61,7 +61,6 @@ print (recordCountFilePath)
 # Temporary cell - DELETE
 now = datetime.now() 
 GoldDimTableName = "DIM_BP_CLIENT_ACCOUNT_TEAM"
-GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
 badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
@@ -130,6 +129,8 @@ SELECT
 CURRENT_TIMESTAMP() LAST_MOD_DT,
 CURRENT_TIMESTAMP() SRC_ROW_BEGN_DT,
 CURRENT_TIMESTAMP() SRC_ROW_END_DT,
+-- 0 As SURR_CLNT_ID,  -- TO BE ADDED LATER FK
+0 As SURR_BROKR_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId}' AS ETL_WRKFLW_ID,
 CURRENT_TIMESTAMP() as ETL_CREATED_DT,
