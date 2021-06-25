@@ -318,20 +318,18 @@ TAM_TRANSACTION_TYPE_ID as TAM_TRNS_TYPE_ID,
 coalesce(STATEMENT_SPLIT_ID,0) as INV_SPLIT_ID,
 se.ADHOC_PRODUCT_ID as ADHC_POL_ID,
 LAST_POSTED_DATE as LAST_POSTD_DATE,--statement
-coalesce(paunionPlan.BILLING_CARRIER_ID,paunionAdhoc.BILLING_CARRIER_ID,0) as BILING_CARIER_ID,
-coalesce(paunionPlan.CARRIER_ID,paunionAdhoc.CARRIER_ID,0) as CARIER_ID,
-coalesce(paunionPlan.CLIENT_ID,paunionAdhoc.CLIENT_ID,0) as CLNT_ID,
-coalesce(paunionPlan.PLAN_TYPE_ID,paunionAdhoc.PLAN_TYPE_ID,0) as LOB_ID,
+coalesce(polPlan.BILNG_CARIER_ID,polAdhoc.BILNG_CARIER_ID,0) as BILING_CARIER_ID,
+coalesce(polPlan.ISUNG_CARIER_ID,polAdhoc.ISUNG_CARIER_ID,0) as CARIER_ID,
+coalesce(polPlan.CLNT_ID,polAdhoc.CLNT_ID,0) as CLNT_ID,
+coalesce(polPlan.POL_LOB_ID,polAdhoc.POL_LOB_ID,0) as LOB_ID,
 --add surrogate Ids here
 coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,0) As SURR_ORG_ID ,
-0 As SURR_BROKR_ID ,
 coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,0) As SURR_ISUNG_CARIER_ID,
 coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,0) As SURR_BILNG_CARIER_ID,
 coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,0) As SURR_CLNT_ID,
-0 As SURR_CNTCT_ID ,
 coalesce(SURR_INV_ID,0) As SURR_INV_ID,
 coalesce(polPlan.SURR_POL_ID,polAdhoc.SURR_POL_ID,0) As SURR_POL_ID,
-SURR_PRODCR_CD_ID,
+coalesce(SURR_PRODCR_CD_ID,0) As SURR_PRODCR_CD_ID,
 coalesce(lobPlan.SURR_LOB_ID,lobAdhoc.SURR_LOB_ID,0) As SURR_LOB_ID ,
 --pr.POSTING_RECORD_ID as BP_POSTING_REC_ID,
 '' as PRODUCER_CODE_ID,
@@ -358,20 +356,17 @@ JOIN DIM_BP_PRODUCER_CODE pc on ps.PAYEE_ID = pc.PRODCR_CD_ID
 --LEFT JOIN DIM_BP_POL pol on (pol.POL_ID = se.PLAN_ID or pol.POL_ID = se.ADHOC_PRODUCT_ID)
 LEFT JOIN DIM_BP_POL polPlan on polPlan.POL_ID = se.PLAN_ID
 LEFT JOIN DIM_BP_POL polAdhoc on polAdhoc.POL_ID = se.ADHOC_PRODUCT_ID
---LEFT JOIN PLAN_ADHOC_PRODUCT paunion on (paunion.PLAN_ADHOC = se.PLAN_ID or paunion.PLAN_ADHOC = se.ADHOC_PRODUCT_ID)
-LEFT JOIN PLAN_ADHOC_PRODUCT paunionPlan on paunionPlan.PLAN_ADHOC = se.PLAN_ID
-LEFT JOIN PLAN_ADHOC_PRODUCT paunionAdhoc on paunionAdhoc.PLAN_ADHOC = se.ADHOC_PRODUCT_ID
-LEFT JOIN DIM_BP_CLIENT cPlan on paunionPlan.CLIENT_ID = cPlan.CLNT_ID
-LEFT JOIN DIM_BP_CLIENT cAdhoc on paunionAdhoc.CLIENT_ID = cAdhoc.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT cPlan on polPlan.CLNT_ID = cPlan.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT cAdhoc on polAdhoc.CLNT_ID = cAdhoc.CLNT_ID
 LEFT JOIN DIM_BP_ORG orgPlan on cPlan.OWNR_OFC_ID = orgPlan.BRNCH_NUM
 LEFT JOIN DIM_BP_ORG orgAdhoc on cAdhoc.OWNR_OFC_ID = orgAdhoc.BRNCH_NUM
-LEFT JOIN DIM_BP_CARRIER icarrPlan on paunionPlan.CARRIER_ID = icarrPlan.CARIER_ID
-LEFT JOIN DIM_BP_CARRIER icarrAdhoc on paunionAdhoc.CARRIER_ID = icarrAdhoc.CARIER_ID
-LEFT JOIN DIM_BP_CARRIER bcarrPlan on paunionPlan.BILLING_CARRIER_ID = bcarrPlan.CARIER_ID
-LEFT JOIN DIM_BP_CARRIER bcarrAdhoc on paunionAdhoc.BILLING_CARRIER_ID = bcarrAdhoc.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER icarrPlan on polPlan.ISUNG_CARIER_ID = icarrPlan.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER icarrAdhoc on polAdhoc.ISUNG_CARIER_ID = icarrAdhoc.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER bcarrPlan on polPlan.BILNG_CARIER_ID = bcarrPlan.CARIER_ID
+LEFT JOIN DIM_BP_CARRIER bcarrAdhoc on polAdhoc.BILNG_CARIER_ID = bcarrAdhoc.CARIER_ID
 LEFT JOIN DIM_BP_INV inv on se.STATEMENT_ID = inv.INV_ID
-LEFT JOIN DIM_BP_LOB lobPlan on paunionPlan.PLAN_TYPE_ID = lobPlan.BP_LOB_ID
-LEFT JOIN DIM_BP_LOB lobAdhoc on paunionAdhoc.PLAN_TYPE_ID = lobAdhoc.BP_LOB_ID
+LEFT JOIN DIM_BP_LOB lobPlan on polPlan.POL_LOB_ID = lobPlan.BP_LOB_ID
+LEFT JOIN DIM_BP_LOB lobAdhoc on polAdhoc.POL_LOB_ID = lobAdhoc.BP_LOB_ID
 -- where ps.POSTING_RECORD_ID = 411685;
 --where se.ADHOC_PRODUCT_ID is null
 """
