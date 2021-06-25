@@ -70,12 +70,6 @@ print (recordCountFilePath)
 # Temporary cell - DELETE
 #now = datetime.now() 
 GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
-#POSsourceSilverPath = "Revenue/Benefits/POSTING_RECORD/" +now.strftime("%Y") + "/06"
-#POSsourceSilverPath = SilverContainerPath + POSsourceSilverPath
-#POSsourceSilverFile = "POSTING_RECORD_2021_06_04.parquet"
-#POSsourceSilverFilePath = POSsourceSilverPath + "/" + POSsourceSilverFile
-#badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
-#recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 POSsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTING_RECORD_AllRecs/" + yymmManual + "/vw_POSTING_RECORD_AllRecs_" + yyyymmddManual + ".parquet"
@@ -220,30 +214,18 @@ unionDataDF = spark.sql(
 f""" 
 SELECT
 BILLING_CARRIER_ID,
-BOR_CLIENT_ID,
-BROKERAGE_DEPARTMENT_ID,
-BROKERAGE_OFFICE_ID,
 CARRIER_ID,
 CLIENT_ID,
 PLAN_TYPE_ID,
-SALES_LEAD_ID,
-SERVICE_LEAD_ID,
-PLAN_ID As PLAN_ADHOC,
-BROKERAGE_OFFICE_ID
+PLAN_ID As PLAN_ADHOC
 FROM PLAN 
 UNION 
 SELECT
 BILLING_CARRIER_ID,
-BOR_CLIENT_ID,
-BROKERAGE_DEPARTMENT_ID,
-BROKERAGE_OFFICE_ID,
 CARRIER_ID,
 CLIENT_ID,
 PLAN_TYPE_ID,
-SALES_LEAD_ID,
-SERVICE_LEAD_ID,
-ADHOC_PRODUCT_ID As PLAN_ADHOC,
-BROKERAGE_OFFICE_ID
+ADHOC_PRODUCT_ID As PLAN_ADHOC
 FROM ADHOC_PRODUCT 
 """
 )
@@ -338,26 +320,21 @@ se.ADHOC_PRODUCT_ID as ADHC_POL_ID,
 LAST_POSTED_DATE as LAST_POSTD_DATE,--statement
 coalesce(paunionPlan.BILLING_CARRIER_ID,paunionAdhoc.BILLING_CARRIER_ID,0) as BILING_CARIER_ID,
 coalesce(paunionPlan.CARRIER_ID,paunionAdhoc.CARRIER_ID,0) as CARIER_ID,
-coalesce(paunionPlan.BOR_CLIENT_ID,paunionAdhoc.BOR_CLIENT_ID,0) as BOR_CLINT_ID,
-coalesce(paunionPlan.BROKERAGE_DEPARTMENT_ID,paunionAdhoc.BROKERAGE_DEPARTMENT_ID,0) as BRKERGE_DEPT_ID,
-coalesce(paunionPlan.BROKERAGE_OFFICE_ID,paunionAdhoc.BROKERAGE_OFFICE_ID,0) as BRNCH_ID,
 coalesce(paunionPlan.CLIENT_ID,paunionAdhoc.CLIENT_ID,0) as CLNT_ID,
 coalesce(paunionPlan.PLAN_TYPE_ID,paunionAdhoc.PLAN_TYPE_ID,0) as LOB_ID,
-coalesce(paunionPlan.SALES_LEAD_ID,paunionAdhoc.SALES_LEAD_ID,0) as SALES_LEAD_ID,
 --add surrogate Ids here
-coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,-1) As SURR_ORG_ID ,
+coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,0) As SURR_ORG_ID ,
 0 As SURR_BROKR_ID ,
-coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,-1) As SURR_ISSNG_CARIER_ID,
-coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,-1) As SURR_BLLNG_CARIER_ID,
-coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,-1) As SURR_CLNT_ID,
+coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,0) As SURR_ISUNG_CARIER_ID,
+coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,0) As SURR_BILNG_CARIER_ID,
+coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,0) As SURR_CLNT_ID,
 0 As SURR_CNTCT_ID ,
 coalesce(SURR_INV_ID,0) As SURR_INV_ID,
-coalesce(polPlan.SURR_POL_ID,polAdhoc.SURR_POL_ID,-1) As SURR_POL_ID,
+coalesce(polPlan.SURR_POL_ID,polAdhoc.SURR_POL_ID,0) As SURR_POL_ID,
 SURR_PRODCR_CD_ID,
-coalesce(lobPlan.SURR_LOB_ID,lobAdhoc.SURR_LOB_ID,-1) As SURR_LOB_ID ,
+coalesce(lobPlan.SURR_LOB_ID,lobAdhoc.SURR_LOB_ID,0) As SURR_LOB_ID ,
 --pr.POSTING_RECORD_ID as BP_POSTING_REC_ID,
 '' as PRODUCER_CODE_ID,
-coalesce(paunionPlan.SERVICE_LEAD_ID,paunionAdhoc.SERVICE_LEAD_ID,0) as SERVICE_LEAD_ID,
 coalesce(s.CHECK_NUMBER,'0') as CHECK_NUMBER, --statement
 coalesce(s.CHECK_DATE,'1800-12-31') as CHECK_DT, --statement
 VOID_IND as VOID_INDICATOR,
