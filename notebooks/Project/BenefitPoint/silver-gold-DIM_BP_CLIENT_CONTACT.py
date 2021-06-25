@@ -82,7 +82,7 @@ print(sourceSilverFilePath)
 # COMMAND ----------
 
 # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == ""):
+if (GoldDimTableName == "" or sourceSilverFilePath == ""):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
 
 # COMMAND ----------
@@ -108,9 +108,8 @@ sourceSilverDF.createOrReplaceTempView("DIM_BP_CLIENT_CONTACT")
 
 # COMMAND ----------
 
-pushdown_query = "(select CLIENT_ID, from [dbo].[DIM_BP_CLIENT]) PC"
+pushdown_query = "(select CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_BP_CLIENT")
 
@@ -173,7 +172,7 @@ coalesce(client.SURR_CLNT_ID,0) As SURR_CLNT_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_BP_CLIENT_CONTACT cc
-JOIN DIM_BP_CLIENT client on cc.CLIENT_ID = client.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT client on cc.CLIENT_ID = client.CLNT_ID
 """
 )
 #display(finalDataDF)
