@@ -278,27 +278,11 @@ clientDF.createOrReplaceTempView("DIM_BP_CLIENT")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_BP_BROKER]) BROKER"
-brokerDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(brokerDF)
-# Register table so it is accessible via SQL Context
-brokerDF.createOrReplaceTempView("DIM_BP_BROKER")
-
-# COMMAND ----------
-
 pushdown_query = "(select * from [dbo].[DIM_BP_ORG]) ORG"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 display(carrierDF)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_BP_ORG")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_BP_CONTACT]) contact"
-carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
-# Register table so it is accessible via SQL Context
-carrierDF.createOrReplaceTempView("DIM_BP_CONTACT")
 
 # COMMAND ----------
 
@@ -326,33 +310,9 @@ carrierDF.createOrReplaceTempView("DIM_BP_PRODUCER_CODE")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_BP_CLIENT_CONTACT]) cc"
-carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
-# Register table so it is accessible via SQL Context
-carrierDF.createOrReplaceTempView("DIM_BP_CLIENT_CONTACT")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_BP_CLIENT_ADDRESS]) ca"
-carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
-# Register table so it is accessible via SQL Context
-carrierDF.createOrReplaceTempView("DIM_BP_CLIENT_ADDRESS")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_BP_CLIENT_ACCOUNT_TEAM]) cat"
-carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
-# Register table so it is accessible via SQL Context
-carrierDF.createOrReplaceTempView("DIM_BP_CLIENT_ACCOUNT_TEAM")
-
-# COMMAND ----------
-
 finalDataDF = spark.sql(
 f"""
-SELECT distinct
+SELECT 
 pr.POSTING_RECORD_ID as INV_LINE_ITM_ID,
 pr.STATEMENT_ENTRY_ID as INV_ENTRY_ID,
 POSTED_AMOUNT as POSTD_AMT,
@@ -371,10 +331,10 @@ se.STATEMENT_ENTRY_ID INV_STMNT_ENTRY_ID,
 se.STATEMENT_ID as INV_ID ,
 CASE WHEN se.PLAN_ID IS NOT NULL THEN se.PLAN_ID ELSE ADHOC_PRODUCT_ID END as POL_ID,
 IS_POSTED as IS_POSTD,
-PREMIUM_AMOUNT as PREM_AMT,
+coalesce(PREMIUM_AMOUNT,0.00) as PREM_AMT,
 TAM_TRANSACTION_TYPE_ID as TAM_TRNS_TYPE_ID,
 coalesce(STATEMENT_SPLIT_ID,0) as INV_SPLIT_ID,
-ADHOC_PRODUCT_ID as ADHC_POL_ID,
+se.ADHOC_PRODUCT_ID as ADHC_POL_ID,
 LAST_POSTED_DATE as LAST_POSTD_DATE,--statement
 coalesce(paunionPlan.BILLING_CARRIER_ID,paunionAdhoc.BILLING_CARRIER_ID,0) as BILING_CARIER_ID,
 coalesce(paunionPlan.CARRIER_ID,paunionAdhoc.CARRIER_ID,0) as CARIER_ID,
@@ -386,11 +346,11 @@ coalesce(paunionPlan.PLAN_TYPE_ID,paunionAdhoc.PLAN_TYPE_ID,0) as LOB_ID,
 coalesce(paunionPlan.SALES_LEAD_ID,paunionAdhoc.SALES_LEAD_ID,0) as SALES_LEAD_ID,
 --add surrogate Ids here
 coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,-1) As SURR_ORG_ID ,
--1 As SURR_BROKR_ID ,
+0 As SURR_BROKR_ID ,
 coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,-1) As SURR_ISSNG_CARIER_ID,
 coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,-1) As SURR_BLLNG_CARIER_ID,
 coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,-1) As SURR_CLNT_ID,
--1 As SURR_CNTCT_ID ,
+0 As SURR_CNTCT_ID ,
 coalesce(SURR_INV_ID,0) As SURR_INV_ID,
 coalesce(polPlan.SURR_POL_ID,polAdhoc.SURR_POL_ID,-1) As SURR_POL_ID,
 SURR_PRODCR_CD_ID,
@@ -398,8 +358,8 @@ coalesce(lobPlan.SURR_LOB_ID,lobAdhoc.SURR_LOB_ID,-1) As SURR_LOB_ID ,
 --pr.POSTING_RECORD_ID as BP_POSTING_REC_ID,
 '' as PRODUCER_CODE_ID,
 coalesce(paunionPlan.SERVICE_LEAD_ID,paunionAdhoc.SERVICE_LEAD_ID,0) as SERVICE_LEAD_ID,
-coalesce(s.CHECK_NUMBER,0) as CHECK_NUMBER, --statement
-coalesce(s.CHECK_DATE,'0') as CHECK_DT, --statement
+coalesce(s.CHECK_NUMBER,'0') as CHECK_NUMBER, --statement
+coalesce(s.CHECK_DATE,'1800-12-31') as CHECK_DT, --statement
 VOID_IND as VOID_INDICATOR,
 coalesce(VOIDED_RECORD_ID,0) as BP_VOID_POSTING_REC_ID,
 '' as ACPT_TOLERANCE_IND,
@@ -436,8 +396,10 @@ LEFT JOIN DIM_BP_INV inv on se.STATEMENT_ID = inv.INV_ID
 LEFT JOIN DIM_BP_LOB lobPlan on paunionPlan.PLAN_TYPE_ID = lobPlan.BP_LOB_ID
 LEFT JOIN DIM_BP_LOB lobAdhoc on paunionAdhoc.PLAN_TYPE_ID = lobAdhoc.BP_LOB_ID
 -- where ps.POSTING_RECORD_ID = 411685;
+--where se.ADHOC_PRODUCT_ID is null
 """
 )
+#display(finalDataDF)
 
 # COMMAND ----------
 
@@ -452,11 +414,11 @@ finalDataDF.count()
 # COMMAND ----------
 
 # Create a dataframe for record count
-sourceRecordCount = sourceSilverDF.count()
+sourceRecordCount = SPLsourceSilverDF.count()
 targetRecordCount = finalDataDF.count()
 #errorRecordCount = errorDataDF.count()
 reconDF = spark.createDataFrame([
-    (GoldFactTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
+    (GoldFactTableName,now,sourceRecordCount,targetRecordCount,SPLsourceSilverFilePath,BatchId,WorkFlowId)
   ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
 
 # Write the recon record to SQL DB
