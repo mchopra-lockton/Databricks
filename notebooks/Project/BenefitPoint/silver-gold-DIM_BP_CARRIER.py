@@ -32,11 +32,8 @@ dbutils.widgets.removeAll()
 # Set the path for Silver layer for Nexsure
 
 now = datetime.now() 
-sourceSilverFolderPath = "Carrier/Benefits/vw_CARRIER_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m")
-sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
-sourceSilverFile = "vw_CARRIER_AllRecs_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
+sourceSilverFilePath = SilverContainerPath + "Carrier/Benefits/vw_CARRIER_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "vw_CARRIER_AllRecs_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 
 dbutils.widgets.text("TableName", "","")
 GoldDimTableName = dbutils.widgets.get("TableName")
@@ -80,7 +77,7 @@ sourceSilverFilePath = "abfss://silver@dlsldpdev01v8nkg988.dfs.core.windows.net/
 # COMMAND ----------
 
  # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+if (GoldDimTableName == "" or sourceSilverFilePath == ""):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
 
 # COMMAND ----------
