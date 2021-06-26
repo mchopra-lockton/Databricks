@@ -22,10 +22,6 @@ dbutils.widgets.removeAll()
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
 # MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC 
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_BP_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
 
 # COMMAND ----------
 
@@ -77,7 +73,7 @@ sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.
 # COMMAND ----------
 
  # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == ""):
+if (GoldDimTableName == "" or sourceSilverFilePath == ""):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
 
 # COMMAND ----------
