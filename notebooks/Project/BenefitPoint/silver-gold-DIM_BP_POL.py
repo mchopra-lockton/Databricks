@@ -72,8 +72,10 @@ now = datetime.now()
 GoldDimTableName = "DIM_BP_POL"
 sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_AllPlans/" + yymmManual + "/vw_PLAN_AllPlans_" + yyyymmddManual + ".parquet"
 adhocSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" + yymmManual + "/vw_ADHOC_PRODUCT_AllPlans_" + yyyymmddManual + ".parquet"
+planTypeSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_TYPE_AllTypes/" + yymmManual + "/vw_PLAN_TYPE_AllTypes_" + yyyymmddManual + ".parquet"
 print(sourceSilverFilePath)
 print(adhocSourceSilverFilePath)
+print(planTypeSourceSilverFilePath)
 
 # COMMAND ----------
 
@@ -89,7 +91,7 @@ if (GoldDimTableName == "" or sourceSilverFilePath == "" or adhocSourceSilverFil
 
 # COMMAND ----------
 
-# Read  office source file
+# Read  source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
@@ -106,12 +108,11 @@ except:
 
 # COMMAND ----------
 
-# Read  office source file
+# Read  adhoc source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
  
   adhocSourceSilverDF = spark.read.parquet(adhocSourceSilverFilePath)
-  #display(sourceSilverDF)
 except:
   # Log the error message
   errorDF = spark.createDataFrame([
@@ -123,8 +124,25 @@ except:
 
 # COMMAND ----------
 
+# Read  plan type source file
+spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
+try:
+ 
+  planTypeSourceSilverDF = spark.read.parquet(planTypeSourceSilverFilePath)
+except:
+  # Log the error message
+  errorDF = spark.createDataFrame([
+    (GoldDimTableName,now,planTypeSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
+  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
+  # Write the recon record to SQL DB
+  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
+  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + planTypeSourceSilverFilePath}}}) 
+
+# COMMAND ----------
+
 sourceSilverDF.createOrReplaceTempView("DIM_BP_PLAN")
 adhocSourceSilverDF.createOrReplaceTempView("DIM_BP_ADHOC_PRODUCT")
+planTypeSourceSilverDF.createOrReplaceTempView("DIM_BP_PLAN_TYPE")
 
 # COMMAND ----------
 
@@ -143,7 +161,7 @@ PLAN_NAME,
 POLICY_NUM,
 POLICY_ORIGIN_REASON_DESC,
 RENEWAL_DATE,
-PLAN_ID,
+PLAN_ID As POL_ID,
 PLAN_FUNDING_TYPE_DESC,
 PLAN_STAGE_FLG_DESC,
 PLAN_TYPE_ID,
@@ -182,7 +200,7 @@ NAME,
 POLICY_NUMBER,
 POLICY_ORIGIN_REASON_DESC,
 RENEWAL_DATE,
-ADHOC_PRODUCT_ID,
+ADHOC_PRODUCT_ID As POL_ID,
 '' as PLAN_FUNDING_TYPE_DESC,
 '' as PLAN_STAGE_FLG_DESC,
 PLAN_TYPE_ID,
@@ -297,13 +315,13 @@ pa.PLAN_NAME as POL_NAME,
 pa.POLICY_NUM as POL_NUM,
 pa.POLICY_ORIGIN_REASON_DESC as POL_ORGN_RSN_DESC,
 pa.RENEWAL_DATE as RENWL_DT,
-pa.PLAN_ID as POL_ID,
+pa.POL_ID as POL_ID,
 pa.PLAN_FUNDING_TYPE_DESC as PLN_FNDG_TYP_DESC,
 pa.PLAN_STAGE_FLG_DESC as PLN_STAGE_FLG_DESC,
 ADHOC_PRODUCT_IND as ADHOC_PRDCT_IND,
-LOC_DESC as LOC_DESC,
-LOC_ID as LOC_ID,
-PLAN_TYPE_DESC PLN_TYP_DESC,
+pt.LOC_DESC as LOC_DESC,
+pt.LOC_ID as LOC_ID,
+pt.PLAN_TYPE_DESC PLN_TYP_DESC,
 pt.PLAN_TYPE_ID as POL_LOB_ID,
 CLIENT_ID as CLNT_ID,
 coalesce(CREATE_DATE,'1800-01-01') as CREATED_DT,
@@ -339,6 +357,7 @@ LEFT JOIN DIM_BP_CARRIER icarr on pa.CARRIER_ID = icarr.CARIER_ID
 LEFT JOIN DIM_BP_CARRIER bcarr on pa.BILLING_CARRIER_ID = bcarr.CARIER_ID
 LEFT JOIN DIM_BP_CLIENT client on pa.CLIENT_ID = client.CLNT_ID
 LEFT JOIN DIM_BP_LOB lob on pa.PLAN_TYPE_ID = lob.BP_LOB_ID
+LEFT JOIN DIM_BP_PLAN_TYPE pt on pa.PLAN_TYPE_ID = pt.PLAN_TYPE_ID
 --JOIN DIM_BP_LOB p on pa.PLAN_ID = p.PLAN_ID
 """
 )
