@@ -61,7 +61,6 @@ print (recordCountFilePath)
 # Temporary cell - DELETE
 now = datetime.now() 
 GoldDimTableName = "DIM_BP_CARRIER"
-GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
 badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
