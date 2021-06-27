@@ -36,7 +36,6 @@ sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 #sourceSilverFile = "DimPolicyLOB_2021_06_04.parquet"
 sourceSilverFile = "DimPolicyLOB_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#sourceSilverFile = "DimPolicyLOB_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 
 dbutils.widgets.text("TableName", "","")
@@ -55,12 +54,7 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/DIM_NX_LOB/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/DIML_NX_LOB/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-
-#Set the file path to log error
-#badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
 
 print ("Param -\'Variables':")
 print (sourceSilverFilePath)
@@ -77,7 +71,7 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicyLOB/2021/06/DimPolicyLOB_2021_06_18.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicyLOB/" + yymmManual + "/DimPolicyLOB_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -93,7 +87,6 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
 
 # COMMAND ----------
 
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicyLOB/2021/06/DimPolicyLOB_2021_06_04.parquet" 
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
