@@ -62,7 +62,6 @@ print (recordCountFilePath)
 # Temporary cell - DELETE
 now = datetime.now()
 GoldDimTableName = "DIM_BP_CLIENT"
-GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
 badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
@@ -184,19 +183,6 @@ display(finalDataDF)
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
-
-# COMMAND ----------
-
-# Create a dataframe for record count
-sourceRecordCount = sourceSilverDF.count()
-targetRecordCount = finalDataDF.count()
-#errorRecordCount = errorDataDF.count()
-reconDF = spark.createDataFrame([
-    (GoldDimTableName,now,sourceRecordCount,targetRecordCount,sourceSilverFilePath,BatchId,WorkFlowId)
-  ],["TableName","ETL_CREATED_DT","SourceRecordCount","TargetRecordCount","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID"])
-
-# Write the recon record to SQL DB
-reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
