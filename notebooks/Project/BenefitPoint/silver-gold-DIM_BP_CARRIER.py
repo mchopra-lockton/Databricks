@@ -66,7 +66,7 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Carrier/Benefits/vw_CARRIER_AllRecs/" + yymmManual + "/vw_CARRIER_AllRecs_" + yyyymmddManual + ".parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Carrier/Benefits/vw_CARRIER_AllRecs/" + yymmManual + "/vw_CARRIER_AllRecs_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
