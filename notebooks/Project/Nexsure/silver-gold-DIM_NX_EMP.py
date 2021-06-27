@@ -69,27 +69,20 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  now = datetime.now() 
-  GoldDimTableName = "DIM_NX_EMP"
-  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "Person/Nexsure/DimEmployee/" +now.strftime("%Y") + "/06"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "DimEmployee_2021_06_04.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/06/DimEmployee_2021_06_04.parquet"
+now = datetime.now() 
+GoldDimTableName = "DIM_NX_EMP"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/" + yymmManual + "/DimEmployee_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
-# MAGIC  lazy val GoldDimTableName = "Dim_NX_Emp"
-# MAGIC }  
+# MAGIC lazy val GoldDimTableName = "Dim_NX_Emp"  
 
 # COMMAND ----------
 
@@ -99,7 +92,6 @@ if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
 
 # COMMAND ----------
 
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimEmployee/2021/06/DimEmployee_2021_06_04.parquet" 
 # Read source file
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 try:
