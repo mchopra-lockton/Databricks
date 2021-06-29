@@ -105,7 +105,7 @@ sourceSilverDF.createOrReplaceTempView("DIM_BP_CLIENT_ACCOUNT_TEAM")
 
 # COMMAND ----------
 
-pushdown_query = "(select CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_BP_CLIENT")
@@ -124,12 +124,13 @@ dummyDataDF = spark.sql(
 SELECT
 -99999 BP_CLNT_ACOUNT_TEAM_ID,
 -99999 BRKR_ID,
+0 CLNT_ID
 '0' ACOUNT_TEAM_OWNR_IND,
 '0' RENWL_OWNR_IND,
 CURRENT_TIMESTAMP() LAST_MOD_DT,
 CURRENT_TIMESTAMP() SRC_ROW_BEGN_DT,
 CURRENT_TIMESTAMP() SRC_ROW_END_DT,
--- 0 As SURR_CLNT_ID,  -- TO BE ADDED LATER FK
+0 As SURR_CLNT_ID,  
 0 As SURR_BROKR_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId}' AS ETL_WRKFLW_ID,
@@ -145,19 +146,20 @@ f"""
 SELECT 
 0 As BP_CLNT_ACOUNT_TEAM_ID,
 BROKER_ID As BRKR_ID,
+CLIENT_ID As CLNT_ID,
 ACCOUNT_TEAM_OWNER_IND As ACOUNT_TEAM_OWNR_IND,
 RENEWAL_OWNER_IND As RENWL_OWNR_IND,
 LAST_MODIFIED_DATE As LAST_MOD_DT,
 RowBeginDate As SRC_ROW_BEGN_DT,
 RowEndDate As SRC_ROW_END_DT,
---coalesce(client.SURR_CLNT_ID,0) As SURR_CLNT_ID,  -- TO BE ADDED LATER FK
+coalesce(client.SURR_CLNT_ID,0) As SURR_CLNT_ID,  -- TO BE ADDED LATER FK
 coalesce(broker.SURR_BROKR_ID,0) As SURR_BROKR_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId}' AS ETL_WRKFLW_ID,
 CURRENT_TIMESTAMP() as ETL_CREATED_DT,
 CURRENT_TIMESTAMP() as ETL_UPDATED_DT
 FROM DIM_BP_CLIENT_ACCOUNT_TEAM cat
-LEFT JOIN DIM_BP_CLIENT client on cat.CLIENT_ID = client.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT client on cat.CLIENT_ID = client.BP_CLNT_ID
 LEFT JOIN DIM_BP_BROKER broker on cat.BROKER_ID = broker.BP_BROKR_ID
 """)
 display(finalDataDF)
@@ -167,6 +169,10 @@ display(finalDataDF)
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
+
+# COMMAND ----------
+
+finalDataDF.count()
 
 # COMMAND ----------
 
@@ -180,18 +186,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
