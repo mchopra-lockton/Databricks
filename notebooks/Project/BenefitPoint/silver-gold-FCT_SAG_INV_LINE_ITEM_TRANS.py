@@ -136,7 +136,7 @@ clientDF.createOrReplaceTempView("DIM_BP_ORG")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_BP_CLIENT]) client"
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(clientDF)
 # Register table so it is accessible via SQL Context
@@ -188,7 +188,7 @@ coalesce(lob.SURR_LOB_ID,-1) as SURR_LOB_ID,
 coalesce(c.SURR_CLNT_ID,-1) as SURR_CLNT_ID  ,
 coalesce(icarr.SURR_CARIER_ID,-1) as SURR_ISSNG_CARIER_ID ,
 coalesce(bcarr.SURR_CARIER_ID,-1) as SURR_BLLNG_CARIER_ID ,
-coalesce(org.SURR_ORG_ID,-1) AS SURR_ORG_ID,
+coalesce(c.SURR_ORG_ID,-1) AS SURR_ORG_ID,
 coalesce(pol.SURR_POL_ID,-1) as SURR_POL_ID,
 -1 AS SURR_PRODCR_CD_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
@@ -196,12 +196,12 @@ coalesce(pol.SURR_POL_ID,-1) as SURR_POL_ID,
 CURRENT_TIMESTAMP() as ETL_CREATED_DT,
 CURRENT_TIMESTAMP() as ETL_UPDATED_DT
 FROM FCT_SAG_INV_LINE_ITEM_TRANS sag
-LEFT JOIN DIM_BP_CLIENT c on sag.ClientBPID = c.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT c on sag.ClientBPID = c.BP_CLNT_ID
 LEFT JOIN DIM_BP_POL pol on sag.PolBPID = pol.POL_ID
 LEFT JOIN DIM_BP_CARRIER icarr on pol.ISUNG_CARIER_ID = icarr.CARIER_ID
 LEFT JOIN DIM_BP_CARRIER bcarr on pol.BILNG_CARIER_ID = bcarr.CARIER_ID
 LEFT JOIN DIM_BP_LOB lob on pol.POL_LOB_ID = lob.BP_LOB_ID
-LEFT JOIN DIM_BP_ORG org on c.OWNR_OFC_ID = org.BRNCH_NUM
+--LEFT JOIN DIM_BP_ORG org on c.OWNR_OFC_ID = org.BRNCH_NUM
 """)
 display(finalDataDF)
 
