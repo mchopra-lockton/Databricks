@@ -169,7 +169,7 @@ SELECT
 PolicyKey As NX_POLICY_KEY,
 PolicyID As NX_POLICY_ID,
 --ClientKey As CLIENT_KEY,
-,coalesce(SURR_CLIENT_ID,0) AS SURR_CLIENT_ID
+coalesce(SURR_CLIENT_ID,0) AS SURR_CLIENT_ID,
 EffectiveDate As POLICY_EFF_DT,
 ExpirationDate As POLICY_EXP_DT,
 PolicyNumber As POLICY_NO,
