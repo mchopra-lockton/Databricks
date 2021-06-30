@@ -143,7 +143,6 @@ sourceBPClientCustomValueeFilePath = SilverContainerPath + "Reference/Benefits/C
 sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath= "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_ClientToCompany/2021/06/PB_ClientToCompany_2021_06_22.parquet"
 sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath ="abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_Reference_CompanyActiveInvestorRelation/2021/06/PB_Reference_CompanyActiveInvestorRelation_2021_06_22.parquet"
 
-
 # COMMAND ----------
 
 # MAGIC %scala
@@ -413,7 +412,6 @@ except:
 
 # COMMAND ----------
 
-sourceBPContactSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Benefits/vw_CONTACT/2021/06/vw_CONTACT_2021_06_15.parquet"
 try:
    sourceBPContactSilverDF = spark.read.parquet(sourceBPContactSilverFilePath)
       
