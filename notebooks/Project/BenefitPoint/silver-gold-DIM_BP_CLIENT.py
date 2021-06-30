@@ -105,32 +105,26 @@ sourceSilverDF.createOrReplaceTempView("DIM_BP_CLIENT")
 
 # COMMAND ----------
 
+pushdown_query = "(select * from [dbo].[DIM_BP_ORG]) org"
+clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+# display(clientDF)
+# Register table so it is accessible via SQL Context
+clientDF.createOrReplaceTempView("DIM_BP_ORG")
+
+# COMMAND ----------
+
 dummyDataDF = spark.sql(
   f"""
 SELECT
--99999 ACCT_NUM,
-'0' ACTIV_IND,
--99999 CLNT_CLASIFICTN_TYP_ID,
--99999 CLNT_FUNDG_TYP_ID,
--99999 CLNT_ID,
--99999 CLNT_IDNTITY,
-'None' CLNT_STATUS_DESC,
--99999 CLNT_STATUS_ID,
--99999 LAST_REVIEWD_BRKR_ID,
+-99999 BP_CLNT_ID,
+-99999 ACCOUNT_NUM,
 'None' NAME,
--99999 NMBR_OF_FULL_TIME_EMP,
--99999 OWNR_DEPT_ID,
--99999 OWNR_OFC_ID,
-'None' SSN,
-'None' TAX_PAYR_ID,
--99999 ORG_ID,
--99999 BUSINESS_TYPE_ID,
-'None' BUSINESS_TYPE_DESC,
 'None' WEBSITE,
-'None' SIC_CODE,
-'None' NAICS_CODE,
--99999 PRIMARY_INDSTRY_ID,
-'None' PRIMARY_INDSTRY_DESC,
+'0' ACTIV_IND,
+'None' As IS_PROSPECT,
+'None' As CLNT_FUND_TYPE_DESC,
+CREATE_DATE As CLNT_SINCE,
+0 As SURR_ORG_ID,
 CURRENT_TIMESTAMP() SRC_ROW_BEGIN_DT,
 CURRENT_TIMESTAMP() SRC_ROW_END_DT,
 '{ BatchId }' AS ETL_BATCH_ID,
@@ -145,36 +139,23 @@ FROM DIM_BP_CLIENT LIMIT 1
 finalDataDF = spark.sql(
 f"""
 SELECT 
-ACCOUNT_NUM As ACCT_NUM,
-ACTIVE_IND As ACTIV_IND,
-CLIENT_CLASSIFICATION_TYPE_ID As CLNT_CLASIFICTN_TYP_ID,
-CLIENT_FUNDING_TYPE_ID As CLNT_FUNDG_TYP_ID,
-CLIENT_ID As CLNT_ID,
-CLIENT_IDENTITY As CLNT_IDNTITY,
-CLIENT_STATUS_DESC As CLNT_STATUS_DESC,
-CLIENT_STATUS_ID As CLNT_STATUS_ID,
-LAST_REVIEWED_BROKER_ID As LAST_REVIEWD_BRKR_ID,
+CLIENT_ID As BP_CLNT_ID,
+ACCOUNT_NUM As ACCOUNT_NUM,
 NAME As NAME,
-NUMBER_OF_FULL_TIME_EMPLOYEES As NMBR_OF_FULL_TIME_EMP,
-OWNER_DEPARTMENT_ID As OWNR_DEPT_ID,
-OWNER_OFFICE_ID As OWNR_OFC_ID,
-SSN As SSN,
-TAX_PAYER_ID As TAX_PAYR_ID,
--1 As ORG_ID,
-BUSINESS_TYPE_ID As BUSINESS_TYPE_ID,
-BUSINESS_TYPE_DESC As BUSINESS_TYPE_DESC,
 WEBSITE	As WEBSITE,
-SIC_CODE As	SIC_CODE,
-NAICS_CODE As NAICS_CODE,
-PRIMARY_INDUSTRY_ID	As PRIMARY_INDSTRY_ID,
-PRIMARY_INDUSTRY_DESC As PRIMARY_INDSTRY_DESC,
+ACTIVE_IND As ACTIV_IND,
+CLIENT_STATUS_DESC As IS_PROSPECT,
+CLIENT_FUNDING_TYPE_DESC As CLNT_FUND_TYPE_DESC,
+CREATE_DATE As CLNT_SINCE,
+coalesce(orgPlan.SURR_ORG_ID,0) As SURR_ORG_ID,
 RowBeginDate As SRC_ROW_BEGIN_DT,
 RowBeginDate As	SRC_ROW_END_DT,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId}' AS ETL_WRKFLW_ID,
 CURRENT_TIMESTAMP() as ETL_CREATED_DT,
 CURRENT_TIMESTAMP() as ETL_UPDATED_DT
-FROM DIM_BP_CLIENT
+FROM DIM_BP_CLIENT cl
+LEFT JOIN DIM_BP_ORG orgPlan on cl.OWNR_OFC_ID = orgPlan.BRNCH_NUM
 """)
 display(finalDataDF)
 
@@ -196,18 +177,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
