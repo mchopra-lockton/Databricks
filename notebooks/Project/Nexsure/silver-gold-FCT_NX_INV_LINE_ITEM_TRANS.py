@@ -32,7 +32,6 @@ now = datetime.now()
 dbutils.widgets.text("TableName", "","")
 GoldFactTableName = dbutils.widgets.get("TableName")
 
-#sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/05"
 #FactInvoiceLineItem table
 sourceSilverFolderPath = "Invoice/Nexsure/FactInvoiceLineItem/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
@@ -57,12 +56,7 @@ badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-
-#Set the file path to log error
-#badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
 
 print ("Param -\'Variables':")
 print (sourceSilverFilePath)
@@ -78,7 +72,7 @@ badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/2021/06/FactInvoiceLineItem_2021_06_18.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Invoice/Nexsure/FactInvoiceLineItem/" + yymmManual + "/FactInvoiceLineItem_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -242,16 +236,16 @@ fact.ParentCarrierKey as PARNT_CARIER_KEY  ,
 fact.BillingCarrierKey as BLLNG_CARIER_KEY  ,
 fact.IssuingCarrierKey as ISSNG_CARIER_KEY  ,
 fact.OrgStructureKey as ORG_KEY  ,
-coalesce(SURR_RESP_ID,0) as SURR_RESP_ID  ,
-SURR_RATE_ID as SURR_RATE_ID ,
-SURR_ORG_ID as SURR_ORG_ID  ,
-coalesce(SURR_LOB_ID,0) as SURR_LOB_ID  ,
-SURR_INV_ID as SURR_INV_ID,
-coalesce(SURR_POL_ID,0) as SURR_POL_ID,
-SURR_EMP_ID as SURR_EMP_ID,
-SURR_LINE_ITEM_ID as SURR_LINE_ITEM_ID  ,
-SURR_COMM_TAX_ID as SURR_COMM_TAX_ID  ,
-coalesce(SURR_CLIENT_ID,0) as SURR_CLIENT_ID  ,
+coalesce(Rsp.SURR_RESP_ID,0) as SURR_RESP_ID  ,
+coalesce(Rtp.SURR_RATE_ID,0) as SURR_RATE_ID ,
+coalesce(Org.SURR_ORG_ID,) as SURR_ORG_ID  ,
+coalesce(LOB.SURR_LOB_ID,0) as SURR_LOB_ID  ,
+coalesce(inv.SURR_INV_ID,0) as SURR_INV_ID,
+coalesce(pol.SURR_POL_ID,0) as SURR_POL_ID,
+coalesce(emp.SURR_EMP_ID,0) as SURR_EMP_ID,
+coalesce(ILItm,SURR_LINE_ITEM_ID,0) as SURR_LINE_ITEM_ID  ,
+coalesce(Comm.SURR_COMM_TAX_ID,0) as SURR_COMM_TAX_ID  ,
+coalesce(cl.SURR_CLIENT_ID,0) as SURR_CLIENT_ID  ,
 coalesce(ICarr.SURR_CARIER_ID, 0) as SURR_ISSNG_CARIER_ID ,
 coalesce(BCarr.SURR_CARIER_ID, 0) as SURR_BLLNG_CARIER_ID ,
 SURR_DATE_ID as	SURR_DATE_ID  ,
