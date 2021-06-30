@@ -48,12 +48,7 @@ badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-
-#Set the file path to log error
-#badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
 
 print ("Param -\'Variables':")
 print (sourceSilverFilePath)
@@ -69,7 +64,7 @@ badRecordsPath = badRecordsRootPath + GoldFactTableName + "/"
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/2021/06/FactAssignment_2021_06_18.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/FactAssignment/" + yymmManual + "/FactAssignment_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -159,11 +154,11 @@ ClientPolicyInd as CLNT_POL_INDICTR,
 DBSourceKey as DB_SRC_KEY,
 InsertAuditKey as SRC_AUDT_INS_KEY,
 UpdateAuditKey as SRC_AUDT_UPD_KEY,
-coalesce(SURR_RESP_ID,0) as RESPNSBLTY_ID,
-coalesce(SURR_ORG_ID,0) as ORG_ID  ,
-coalesce(SURR_POL_ID,0) as POL_ID,
-coalesce(SURR_EMP_ID,0) as EMP_ID,  
-coalesce(SURR_CLIENT_ID,0) as CLNT_ID,
+coalesce(Rsp.SURR_RESP_ID,0) as RESPNSBLTY_ID,
+coalesce(Org.SURR_ORG_ID,0) as ORG_ID  ,
+coalesce(pol.SURR_POL_ID,0) as POL_ID,
+coalesce(emp.SURR_EMP_ID,0) as EMP_ID,  
+coalesce(cl.SURR_CLIENT_ID,0) as CLNT_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WORKFLOW_ID,
 current_timestamp() AS ETL_CREATED_DT,
