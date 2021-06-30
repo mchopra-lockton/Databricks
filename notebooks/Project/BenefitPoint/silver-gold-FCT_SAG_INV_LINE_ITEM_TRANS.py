@@ -128,14 +128,6 @@ clientDF.createOrReplaceTempView("DIM_BP_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_BP_ORG]) org"
-clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(clientDF)
-# Register table so it is accessible via SQL Context
-clientDF.createOrReplaceTempView("DIM_BP_ORG")
-
-# COMMAND ----------
-
 pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(clientDF)
@@ -184,12 +176,12 @@ TransCd as TRANS_CD,
 TransDesc as TRANS_DESC,
 TransNo as TRANS_NO,
 VoidID as VOID_ID,
-coalesce(lob.SURR_LOB_ID,-1) as SURR_LOB_ID,
-coalesce(c.SURR_CLNT_ID,-1) as SURR_CLNT_ID  ,
-coalesce(icarr.SURR_CARIER_ID,-1) as SURR_ISSNG_CARIER_ID ,
-coalesce(bcarr.SURR_CARIER_ID,-1) as SURR_BLLNG_CARIER_ID ,
-coalesce(c.SURR_ORG_ID,-1) AS SURR_ORG_ID,
-coalesce(pol.SURR_POL_ID,-1) as SURR_POL_ID,
+coalesce(lob.SURR_LOB_ID,0) as SURR_LOB_ID,
+coalesce(c.SURR_CLNT_ID,0) as SURR_CLNT_ID  ,
+coalesce(icarr.SURR_CARIER_ID,0) as SURR_ISSNG_CARIER_ID ,
+coalesce(bcarr.SURR_CARIER_ID,0) as SURR_BLLNG_CARIER_ID ,
+coalesce(c.SURR_ORG_ID,0) AS SURR_ORG_ID,
+coalesce(pol.SURR_POL_ID,0) as SURR_POL_ID,
 -1 AS SURR_PRODCR_CD_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId}' AS ETL_WRKFLW_ID,
