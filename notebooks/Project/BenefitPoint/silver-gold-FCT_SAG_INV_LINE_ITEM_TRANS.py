@@ -128,7 +128,7 @@ clientDF.createOrReplaceTempView("DIM_BP_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) client"
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID, SURR_ORG_ID from [dbo].[DIM_BP_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # display(clientDF)
 # Register table so it is accessible via SQL Context
