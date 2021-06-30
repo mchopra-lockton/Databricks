@@ -36,8 +36,6 @@ POSsourceSilverFilePath = SilverContainerPath + "Revenue/Benefits/vw_POSTING_REC
 SPLsourceSilverFilePath = SilverContainerPath + "Revenue/Benefits/vw_POSTED_SPLIT_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "POSTED_SPLIT_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 SENTsourceSilverFilePath = SilverContainerPath + "Revenue/Benefits/ vw_STATEMENT_ENTRY_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "STATEMENT_ENTRY_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 STMTsourceSilverFilePath = SilverContainerPath + "Revenue/Benefits/ vw_STATEMENT_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "STATEMENT_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-planSourceSilverFilePath = SilverContainerPath + "Policy/Benefits/vw_PLAN_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "PLAN_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-adhocSourceSilverFilePath = SilverContainerPath + "Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "ADHOC_PRODUCT_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
 
 dbutils.widgets.text("BatchId", "","")
 BatchId = dbutils.widgets.get("BatchId")
@@ -79,10 +77,6 @@ SPLsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windo
 SENTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_ENTRY_AllRecs/" + yymmManual + "/vw_STATEMENT_ENTRY_AllRecs_" + yyyymmddManual + ".parquet"
 
 STMTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_AllRecs/" + yymmManual + "/vw_STATEMENT_AllRecs_" + yyyymmddManual + ".parquet"
-
-planSourceSilverFilePath ="abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_AllPlans/" + yymmManual + "/vw_PLAN_AllPlans_" + yyyymmddManual + ".parquet"
-
-adhocSourceSilverFilePath="abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" + yymmManual + "/vw_ADHOC_PRODUCT_AllPlans_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -166,74 +160,10 @@ except:
 
 # COMMAND ----------
 
-# Read Plan file
-spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
-try:
- 
-  plansourceSilverDF = spark.read.parquet(planSourceSilverFilePath)
-  #display(STMTsourceSilverDF)
-except:
-  # Log the error message
-  errorDF = spark.createDataFrame([
-    (GoldFactTableName,now,planSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
-  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
-  # Write the recon record to SQL DB
-  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + planSourceSilverFilePath}}})
-
-# COMMAND ----------
-
-# Read adhoc product file
-spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
-try:
- 
-  adhocSourceSilverDF = spark.read.parquet(adhocSourceSilverFilePath)
-  #display(STMTsourceSilverDF)
-except:
-  # Log the error message
-  errorDF = spark.createDataFrame([
-    (GoldFactTableName,now,adhocSourceSilverFilePath,BatchId,WorkFlowId,"Error reading the file")
-  ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
-  # Write the recon record to SQL DB
-  errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + adhocSourceSilverFilePath}}})
-
-# COMMAND ----------
-
 POSsourceSilverDF.createOrReplaceTempView("POSTING_RECORD")
 SPLsourceSilverDF.createOrReplaceTempView("POSTED_SPLIT")
 SENTsourceSilverDF.createOrReplaceTempView("STATEMENT_ENTRY")
 STMTsourceSilverDF.createOrReplaceTempView("STATEMENT")
-plansourceSilverDF.createOrReplaceTempView("PLAN")
-adhocSourceSilverDF.createOrReplaceTempView("ADHOC_PRODUCT")
-
-# COMMAND ----------
-
-# Get union set of records
-unionDataDF = spark.sql(
-f""" 
-SELECT
-BILLING_CARRIER_ID,
-CARRIER_ID,
-CLIENT_ID,
-PLAN_TYPE_ID,
-PLAN_ID As PLAN_ADHOC
-FROM PLAN 
-UNION 
-SELECT
-BILLING_CARRIER_ID,
-CARRIER_ID,
-CLIENT_ID,
-PLAN_TYPE_ID,
-ADHOC_PRODUCT_ID As PLAN_ADHOC
-FROM ADHOC_PRODUCT 
-"""
-)
-#display(unionDataDF)
-
-# COMMAND ----------
-
-unionDataDF.createOrReplaceTempView("PLAN_ADHOC_PRODUCT")
 
 # COMMAND ----------
 
@@ -252,19 +182,11 @@ carrierDF.createOrReplaceTempView("DIM_BP_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[DIM_BP_CLIENT]) client"
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID, SURR_ORG_ID from [dbo].[DIM_BP_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 display(clientDF)
 # Register table so it is accessible via SQL Context
 clientDF.createOrReplaceTempView("DIM_BP_CLIENT")
-
-# COMMAND ----------
-
-pushdown_query = "(select * from [dbo].[DIM_BP_ORG]) ORG"
-carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-display(carrierDF)
-# Register table so it is accessible via SQL Context
-carrierDF.createOrReplaceTempView("DIM_BP_ORG")
 
 # COMMAND ----------
 
@@ -323,7 +245,7 @@ coalesce(polPlan.ISUNG_CARIER_ID,polAdhoc.ISUNG_CARIER_ID,0) as CARIER_ID,
 coalesce(polPlan.CLNT_ID,polAdhoc.CLNT_ID,0) as CLNT_ID,
 coalesce(polPlan.POL_LOB_ID,polAdhoc.POL_LOB_ID,0) as LOB_ID,
 --add surrogate Ids here
-coalesce(orgPlan.SURR_ORG_ID,orgAdhoc.SURR_ORG_ID,0) As SURR_ORG_ID ,
+coalesce(cPlan.SURR_ORG_ID,cAdhoc.SURR_ORG_ID,0) As SURR_ORG_ID ,
 coalesce(icarrPlan.SURR_CARIER_ID,icarrAdhoc.SURR_CARIER_ID,0) As SURR_ISUNG_CARIER_ID,
 coalesce(bcarrPlan.SURR_CARIER_ID,bcarrAdhoc.SURR_CARIER_ID,0) As SURR_BILNG_CARIER_ID,
 coalesce(cPlan.SURR_CLNT_ID,cAdhoc.SURR_CLNT_ID,0) As SURR_CLNT_ID,
@@ -353,13 +275,12 @@ JOIN POSTING_RECORD pr on ps.POSTING_RECORD_ID = pr.POSTING_RECORD_ID
 JOIN STATEMENT_ENTRY se on pr.STATEMENT_ENTRY_ID = se.STATEMENT_ENTRY_ID
 JOIN STATEMENT s on se.STATEMENT_ID = s.STATEMENT_ID
 JOIN DIM_BP_PRODUCER_CODE pc on ps.PAYEE_ID = pc.PRODCR_CD_ID
---LEFT JOIN DIM_BP_POL pol on (pol.POL_ID = se.PLAN_ID or pol.POL_ID = se.ADHOC_PRODUCT_ID)
 LEFT JOIN DIM_BP_POL polPlan on polPlan.POL_ID = se.PLAN_ID
 LEFT JOIN DIM_BP_POL polAdhoc on polAdhoc.POL_ID = se.ADHOC_PRODUCT_ID
-LEFT JOIN DIM_BP_CLIENT cPlan on polPlan.CLNT_ID = cPlan.CLNT_ID
-LEFT JOIN DIM_BP_CLIENT cAdhoc on polAdhoc.CLNT_ID = cAdhoc.CLNT_ID
-LEFT JOIN DIM_BP_ORG orgPlan on cPlan.OWNR_OFC_ID = orgPlan.BRNCH_NUM
-LEFT JOIN DIM_BP_ORG orgAdhoc on cAdhoc.OWNR_OFC_ID = orgAdhoc.BRNCH_NUM
+LEFT JOIN DIM_BP_CLIENT cPlan on polPlan.CLNT_ID = cPlan.BP_CLNT_ID
+LEFT JOIN DIM_BP_CLIENT cAdhoc on polAdhoc.CLNT_ID = cAdhoc.BP_CLNT_ID
+--LEFT JOIN DIM_BP_ORG orgPlan on cPlan.SURR_ORG_ID = orgPlan.SURR_ORG_ID
+--LEFT JOIN DIM_BP_ORG orgAdhoc on cAdhoc.SURR_ORG_ID = orgAdhoc.SURR_ORG_ID
 LEFT JOIN DIM_BP_CARRIER icarrPlan on polPlan.ISUNG_CARIER_ID = icarrPlan.CARIER_ID
 LEFT JOIN DIM_BP_CARRIER icarrAdhoc on polAdhoc.ISUNG_CARIER_ID = icarrAdhoc.CARIER_ID
 LEFT JOIN DIM_BP_CARRIER bcarrPlan on polPlan.BILNG_CARIER_ID = bcarrPlan.CARIER_ID
