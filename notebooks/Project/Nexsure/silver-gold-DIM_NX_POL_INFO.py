@@ -31,12 +31,9 @@ dbutils.widgets.removeAll()
 now = datetime.now() 
 #sourceSilverPath = "Invoice/Nexsure/DimRateType/2021/06"
 sourceSilverFolderPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/" + now.strftime("%m")
-#sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/" + "06"
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "FactPolicyInfo_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_25.parquet"
-#sourceSilverFile = "DimEntity_" + now.strftime("%Y") + "_" + "06" + "_04.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 
 dbutils.widgets.text("TableName", "","")
@@ -55,12 +52,9 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 now = datetime.now() # current date and time
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 
 #Set the file path to log error
-#badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
 
 print ("Param -\'Variables':")
 print (sourceSilverFilePath)
@@ -70,27 +64,20 @@ print (recordCountFilePath)
 # COMMAND ----------
 
 # Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  now = datetime.now() 
-  GoldDimTableName = "DIM_NX_POL_INFO"
-  GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "Policy/Nexsure/FactPolicyInfo/" +now.strftime("%Y") + "/06"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "FactPolicyInfo_2021_06_04.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
-  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/2021/06/FactPolicyInfo_2021_06_04.parquet"
+now = datetime.now() 
+GoldDimTableName = "DIM_NX_POL_INFO"
+GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
+badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/FactPolicyInfo/" + yymmManual + "/FactPolicyInfo_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
 # MAGIC %scala
 # MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
-# MAGIC  lazy val GoldDimTableName = "Dim_NX_POL_INFO"
-# MAGIC }  
+# MAGIC lazy val GoldDimTableName = "Dim_NX_POL_INFO"  
 
 # COMMAND ----------
 
@@ -180,10 +167,10 @@ finalDataDF = spark.sql(
 f""" 
 SELECT
 PolicyInfoKey as POL_INFO_KEY,
-SURR_POL_ID as POL_ID,
-SURR_CLIENT_ID as CLIENT_ID,
-SURR_ORG_ID as ORG_ID,
-SURR_POL_LOB_ID as POL_LOB_ID,
+p.SURR_POL_ID as POL_ID,
+c.SURR_CLIENT_ID as CLIENT_ID,
+o.SURR_ORG_ID as ORG_ID,
+pl.SURR_POL_LOB_ID as POL_LOB_ID,
 DBSourceKey as DB_SRC_KEY,
 InsertAuditKey as SRC_AUDT_INS_KEY,
 UpdateAuditKey as SRC_AUDT_UPD_KEY,
@@ -217,18 +204,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
