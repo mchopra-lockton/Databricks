@@ -151,12 +151,6 @@ sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath ="abfss://c3
 
 # COMMAND ----------
 
-# Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceBPClientSilverFilePath == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
-
-# COMMAND ----------
-
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInRead=CORRECTED")
 
 try:
@@ -169,7 +163,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -186,7 +180,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCLientAddressSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCLientAddressSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -200,7 +194,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPBrokerSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPBrokerSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -214,7 +208,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPBrokerOfficeSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPBrokerOfficeSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -232,7 +226,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientContactSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientContactSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -249,7 +243,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPContactSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPContactSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -263,7 +257,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCLientAccountTeamSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCLientAccountTeamSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -277,7 +271,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientvalueassocSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientvalueassocSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -291,7 +285,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCustomFieldSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPCustomFieldSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -305,7 +299,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPServiceSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPServiceSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -319,7 +313,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_MasterLinkNoLMSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_MasterLinkNoLMSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -333,7 +327,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_DUNS_ReferenceSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_DUNS_ReferenceSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -347,7 +341,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath}}})
 
 # COMMAND ----------
 
@@ -366,7 +360,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -380,7 +374,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientExcludeSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientExcludeSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -394,7 +388,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientOptionValueFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientOptionValueFilePath}}})
 
 # COMMAND ----------
 
@@ -408,7 +402,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientCustomValueeFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPClientCustomValueeFilePath}}})
 
 # COMMAND ----------
 
@@ -422,7 +416,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPContactSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceBPContactSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -478,6 +472,7 @@ SELECT
 'None' as IS_PROSPECT  ,
 'None' as CLNT_FUND_TYPE_DESC ,
 '1800-12-31' as CLNT_SINCE  ,
+'1800-12-31' as CLNT_TO  ,
 '1800-12-31' as SRC_ROW_BEGIN_DT  ,
 '1800-12-31' as SRC_ROW_END_DT   
 ,'{ BatchId }' AS ETL_BATCH_ID
@@ -490,11 +485,30 @@ FROM SilverBPClientTemp e LIMIT 1
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC /*SELECT
+# MAGIC a.CLIENT_ID as BP_CLNT_ID ,
+# MAGIC CASE WHEN z.SourceId IS NULL THEN 'N' ELSE 'Y' END as CONFDL_ACCT 
+# MAGIC from SilverBPClientTemp a
+# MAGIC LEFT JOIN SilverBPClientExclude z on a.client_id = z.SourceId
+# MAGIC WHERE SourceId is NOT NULL
+# MAGIC 
+# MAGIC SELECT
+# MAGIC OWNER_OFFICE_ID
+# MAGIC from SilverBPClientTemp a
+# MAGIC */
+# MAGIC SELECT
+# MAGIC BRNCH_NUM
+# MAGIC from DIM_BP_ORG org
+
+# COMMAND ----------
+
 finalDataDF = spark.sql(
 f""" 
 SELECT
 a.CLIENT_ID as BP_CLNT_ID   ,
 a.ACCOUNT_NUM as ACCOUNT_NUM  ,
+a.TAX_PAYER_ID AS FEIN ,
 a.NAME as NAME  ,
 a.WEBSITE as WEBSITE  ,
 a.ACTIVE_IND as ACTIV_IND  ,
@@ -520,9 +534,9 @@ a.BUSINESS_TYPE_DESC as BUS_TYPE  ,
 bSales.LAST_NAME + ', ' + bSales.FIRST_NAME as PRI_SALES_LEAD  ,
 bAdmin.LAST_NAME + ', ' + bAdmin.FIRST_NAME as ADMIN  ,
 bContact.LAST_NAME + ', ' + bContact.FIRST_NAME as PRI_CONTACT  ,
-a.BROKER_OF_RECORD as TAM_CLNT_ID  ,
-a.CREATE_DATE as PRI_BP_EFF_DT  ,
-a.RowBeginDate as CLNT_SINCE   ,
+a.BROKER_OF_RECORD as PRI_BP_EFF_DT  ,
+a.CREATE_DATE as CLNT_SINCE  ,
+a.RowEndDate as  CLNT_TO  ,
 '' as BP_LAST_MOD_DT  ,
 a.RowBeginDate as SRC_ROW_BEGIN_DT   ,
 a.RowEndDate as SRC_ROW_END_DT   ,
@@ -532,8 +546,8 @@ current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT,
 Public_Private_Indicator as PUBLIC_PRIV_IND  ,
 Non_Profit_Indicator as NON_PRFIT  ,
-'' as ANNL_REVNUE  ,
-'' as NUM_OF_EMP  ,
+Sales_Volume_US_Dollars_ AS ANNL_REVNUE ,
+NUMBER_OF_FULL_TIME_EMPLOYEES AS NUM_OF_EMP ,
 NYSE_Ticker as NYSE_TICKER  ,
 ASE_Ticker as ASE_TICKER  ,
 NMS_Ticker as NMS_TICKER  ,
@@ -558,7 +572,7 @@ InvestorSince as PTCHBK_INVSTOR_SINCE  ,
 '' as DB_MATCH  ,
 D_U_N_S_Number as DUNS_NUM  ,
 '' as PRI_NAICS_DESC  ,
-'' as CONFDL_ACCT 
+CASE WHEN z.SourceId IS NULL THEN 'N' ELSE 'Y' END as CONFDL_ACCT 
 from SilverBPClientTemp a
 LEFT JOIN SilverBPAddressFinal b on a.client_id = b.client_id 
 LEFT JOIN SilverBPClientExclude z on a.client_id = z.SourceId
@@ -621,90 +635,3 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select a.NAME,
-# MAGIC a.CLIENT_ID,
-# MAGIC a.TAX_PAYER_ID,
-# MAGIC 'Benefits',
-# MAGIC a.WEBSITE,
-# MAGIC a.ACCOUNT_NUM,
-# MAGIC a.ACTIVE_IND,
-# MAGIC CASE  WHEN  z.Client_Name_SourceSystem is null then 'N' else 'Y' END as BP_Confidential,
-# MAGIC b.STREET1,
-# MAGIC b.STREET2,
-# MAGIC b.CITY,
-# MAGIC b.POSTAL_CODE,
-# MAGIC b.STATE,
-# MAGIC b.COUNTRY,
-# MAGIC a.NAICS_CODE,
-# MAGIC a.SIC_CODE,
-# MAGIC f1.FIRST_NAME,
-# MAGIC f1.LAST_NAME,
-# MAGIC f1.EMAIL_ADDR,
-# MAGIC a.CLIENT_STATUS_DESC,
-# MAGIC bo.OFFICE_NAME,
-# MAGIC a.OWNER_DEPARTMENT_ID,
-# MAGIC x1.CUSTOM_FIELD_ID, 
-# MAGIC x1.CUSTOM_FIELD_VALUE_ID,
-# MAGIC a.DOING_BUSINESS_AS,
-# MAGIC a.CLIENT_FUNDING_TYPE_DESC,
-# MAGIC a.BUSINESS_TYPE_DESC,
-# MAGIC bSales.LAST_NAME + ', ' + bSales.FIRST_NAME as Primary_Sales_Lead,
-# MAGIC bService.LAST_NAME + ', ' + bService.FIRST_NAME as Primary_Service_Lead,
-# MAGIC bAdmin.LAST_NAME + ', ' + bAdmin.FIRST_NAME as Administrator,
-# MAGIC bContact.LAST_NAME + ', ' + bContact.FIRST_NAME as Primary_Contact,
-# MAGIC a.BROKER_OF_RECORD,
-# MAGIC a.CREATE_DATE,
-# MAGIC a.RowBeginDate  as Client_Since,
-# MAGIC Public_Private_Indicator,
-# MAGIC Non_Profit_Indicator,
-# MAGIC NYSE_Ticker,
-# MAGIC ASE_Ticker,
-# MAGIC NMS_Ticker,
-# MAGIC NAS_Ticker,
-# MAGIC OTC_Ticker,
-# MAGIC Global_Ultimate_D_U_N_S_Number,
-# MAGIC Global_Ultimate_Business_Name,
-# MAGIC Domestic_Ultimate_D_U_N_S_Number,
-# MAGIC Domestic_Ultimate_Business_Name,
-# MAGIC Parent_D_U_N_S_Number,
-# MAGIC Headquarter_Parent_Business_Name,
-# MAGIC PBID_ToUse,
-# MAGIC  PEStatus_ToUse,
-# MAGIC  D_U_N_S_Number,
-# MAGIC clientsourceid ,
-# MAGIC pbid_touse ,
-# MAGIC InvestorID ,
-# MAGIC InvestorName, 
-# MAGIC InvestorStatus, 
-# MAGIC InvestorType ,
-# MAGIC Holding ,
-# MAGIC InvestorSince,
-# MAGIC  ''  as DB_Match,
-# MAGIC  D_U_N_S_Number,
-# MAGIC a.CALCULATED_AS_OF_DATE ,
-# MAGIC '' as LMDB_ID,
-# MAGIC '' as BenefitPoint_ID,
-# MAGIC  ''  as ImageRight_ID
-# MAGIC  from SilverBPClientTemp a
-# MAGIC left join  SilverBPAddressFinal b
-# MAGIC on a.client_id = b.client_id 
-# MAGIC left join SilverBPClientExclude z
-# MAGIC on a.client_id = z.SourceId
-# MAGIC left JOIN SilverBPBRokerOfficeTEMP bo on a.OWNER_OFFICE_ID = bo.OFFICE_ID
-# MAGIC left join SilverBPBrokerTemp bSales on a.SALES_LEAD_BROKER_ID = bSales.BROKER_ID 
-# MAGIC left join SilverBPBrokerTemp bService on a.SERVICE_LEAD_BROKER_ID = bService.BROKER_ID
-# MAGIC left join (select * from SilverBPClientAccountTeamsTEMP   where rowenddate = '9999-12-31') catAdmin  on a.CLIENT_ID = catAdmin.CLIENT_ID  and catAdmin.ACCOUNT_TEAM_OWNER_IND = 1
-# MAGIC left join SilverBPBrokerTemp bAdmin on catAdmin.BROKER_ID = bAdmin.BROKER_ID
-# MAGIC LEFT JOIN (select * from SilverBPClientAccountTeamsTEMP where rowenddate = '9999-12-31')catRenewal on a.CLIENT_ID = catRenewal.CLIENT_ID and catRenewal.RENEWAL_OWNER_IND = 1
-# MAGIC LEFT JOIN SilverBPBrokerTemp bContact on catRenewal.BROKER_ID = bContact.BROKER_ID
-# MAGIC left join SilverBPClientContactFinal f on a.CLIENT_ID = f.CLIENT_ID
-# MAGIC left join SilverBPContactFinal f1  on f.contact_id= f1.CONTACT_ID
-# MAGIC left join SilverBPClientCustomfiled x1 on x1.CLIENT_ID = a.client_id
-# MAGIC left join (select * from SilverBPMasterLinkTEMP where LOB='Benefits' ) i on a.client_ID = i.SourceID
-# MAGIC left join SilverBPDUNSRefTEMP j on i.DUNSCurrent = j.D_U_N_S_Number
-# MAGIC left join SilverBPPithbooktoCompTEMP k on  i.PrimaryKey = k.PrimaryKey
-# MAGIC left join SilverBPPBActiveInvestorFinal l on k.PBID_ToUse = l.CompanyID
