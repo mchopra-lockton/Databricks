@@ -66,7 +66,7 @@ BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
 WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/" + yymmManual + "/LDP_360_ClientMatch_" + yyyymmddManual + ".parquet"
 
-sourceSilverFilePath = SilverContainerPath + "Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/2021/07/02/Matching_Report.parquet"
+sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/2021/07/02/Matching_Report.parquet"
 
 # COMMAND ----------
 
