@@ -19,14 +19,17 @@ dbutils.widgets.removeAll()
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "DIM_BP_BROKER"
+# MAGIC }
 
 # COMMAND ----------
 
 # Set the path for Silver layer for Nexsure
-
 now= datetime.now()   
 
 sourceSilverFilePath = SilverContainerPath + "Person/Benefits/vw_BROKER_AllRecs/" +now.strftime("%Y") + "/" + now.strftime("%m") + "/" + "vw_BROKER_AllRecs_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
@@ -54,27 +57,16 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "DIM_BP_BROKER"
-GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Benefits/vw_BROKER_AllRecs/" + yymmManual + "/vw_BROKER_AllRecs_" + yyyymmddManual + ".parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldDimTableName = "DIM_BP_BROKER"
-
-# COMMAND ----------
-
- # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverFilePath == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldDimTableName = "DIM_BP_BROKER"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Benefits/vw_BROKER_AllRecs/" + yymmManual + "/vw_BROKER_AllRecs_" + yyyymmddManual + ".parquet"
+  print(BatchId)
 
 # COMMAND ----------
 
@@ -92,7 +84,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -146,7 +138,7 @@ CURRENT_TIMESTAMP() as ETL_CREATED_DT,
 CURRENT_TIMESTAMP() as ETL_UPDATED_DT
 FROM DIM_BP_BROKER
 """)
-display(finalDataDF)
+#display(finalDataDF)
 
 # COMMAND ----------
 
@@ -169,18 +161,6 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
-
-# COMMAND ----------
-
 GoldDimTableNameComplete = finalTableSchema + "." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
@@ -196,6 +176,3 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
-
-# COMMAND ----------
-
