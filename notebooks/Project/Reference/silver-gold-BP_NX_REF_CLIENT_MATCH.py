@@ -23,7 +23,12 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "MSTR_CLIENT_REF"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -57,22 +62,18 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell to run manually - DELETE
-now = datetime.now() 
-GoldDimTableName = "MSTR_CLIENT_REF"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/" + yymmManual + "/LDP_360_ClientMatch_" + yyyymmddManual + ".parquet"
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldDimTableName = "MSTR_CLIENT_REF"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/" + yymmManual + "/LDP_360_ClientMatch_" + yyyymmddManual + ".parquet"
 
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/2021/07/02/Matching_Report.parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell to run manually - DELETE
-# MAGIC lazy val GoldDimTableName = "MSTR_CLIENT_REF"
+#  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/DIM_CLIENT_MATCH/2021/07/02/Matching_Report.parquet"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/MSTR_CLIENT_REF/2021/07/Client_Matching_Report_2021_07_05.parquet"
 
 # COMMAND ----------
 
@@ -112,23 +113,45 @@ sourceSilverDF.createOrReplaceTempView("MSTR_CLIENT_REF")
 
 # COMMAND ----------
 
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) client"
+clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+display(clientDF)
+# Register table so it is accessible via SQL Context
+clientDF.createOrReplaceTempView("DIM_BP_CLIENT")
+
+# COMMAND ----------
+
+pushdown_query = "(select NX_CLIENT_ID,SURR_CLIENT_ID from [dbo].[DIM_NX_CLIENT]) client"
+clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
+display(clientDF)
+# Register table so it is accessible via SQL Context
+clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
+
+# COMMAND ----------
+
 # Get final set of records
 finalDataDF = spark.sql(
 f""" 
 SELECT
 Final_UPID AS MSTR_CLIENT_ID,
 Source_Name AS CLIENT_SRC,
-CASE WHEN Source_Name = 'BenefitPoint' THEN CLIENT_ID ELSE EntityID END AS CLIENT_ID,
---COALESCE(CLIENT_ID,0) AS CLIENT_ID,
+--CASE WHEN Source_Name = 'BenefitPoint' THEN CLIENT_ID ELSE EntityID END AS CLIENT_ID,
+COALESCE(cn.SURR_CLIENT_ID,cb.SURR_CLNT_ID,0) AS CLIENT_ID,
 '{ BatchId }' AS ETL_BATCH_ID,
 '{ WorkFlowId }' AS ETL_WRKFLW_ID,
 current_timestamp() AS ETL_CREATED_DT,
 current_timestamp() AS ETL_UPDATED_DT
-FROM MSTR_CLIENT_REF
+FROM MSTR_CLIENT_REF r
+LEFT JOIN DIM_NX_CLIENT cn on cn.NX_CLIENT_ID  = r.entityId
+LEFT JOIN DIM_BP_CLIENT cb ON cb.BP_CLNT_ID = r.client_ID
 """
 )
-#display(finalDataDF)
+display(finalDataDF)
 # finalDataDF .repartition(1).write.format("csv").option("header", "true").save("abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/LocktonBookOfBusiness/DIM_CLIENT_MATCH/2021/07/test.csv")
+
+# COMMAND ----------
+
+finalDataDF.count()
 
 # COMMAND ----------
 
@@ -177,3 +200,6 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
+
+# COMMAND ----------
+
