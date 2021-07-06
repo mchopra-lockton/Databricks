@@ -19,13 +19,13 @@ dbutils.widgets.removeAll()
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
 # MAGIC 
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_BP_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "DIM_BP_ORG"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -65,29 +65,18 @@ print(regionSourceSilverFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "DIM_BP_ORG"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Benefits/vw_BROKER_OFFICE_AllRecs/" + yymmManual + "/vw_BROKER_OFFICE_AllRecs_" + yyyymmddManual + ".parquet"
-regionSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Benefits/vw_BROKER_REGION_AllRecs/" + yymmManual + "/vw_BROKER_REGION_AllRecs_" + yyyymmddManual + ".parquet"
-print(sourceSilverFilePath)
-print(regionSourceSilverFilePath)
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC  val GoldDimTableName = "DIM_BP_ORG"
-
-# COMMAND ----------
-
-# Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverFilePath == "" or regionSourceSilverFilePath == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldDimTableName = "DIM_BP_ORG"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Benefits/vw_BROKER_OFFICE_AllRecs/" + yymmManual + "/vw_BROKER_OFFICE_AllRecs_" + yyyymmddManual + ".parquet"
+  regionSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/OrgStructure/Benefits/vw_BROKER_REGION_AllRecs/" + yymmManual + "/vw_BROKER_REGION_AllRecs_" + yyyymmddManual + ".parquet"
+  print(sourceSilverFilePath)
+  print(regionSourceSilverFilePath)
 
 # COMMAND ----------
 
@@ -104,7 +93,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -121,7 +110,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + regionSourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + regionSourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -208,12 +197,6 @@ LEFT JOIN BP_NX_REF_ORG_STR_MAPPING orgstrmap ON o.OFFICE_ID = orgstrmap.OFFICE_
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC 
-# MAGIC select SERIES from BP_NX_REF_ORG_STR_MAPPING
-
-# COMMAND ----------
-
 # Do not proceed if there are no records to insert
 if (finalDataDF.count() == 0):
   dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "There are no records to insert: " + sourceSilverFilePath}}})
@@ -230,18 +213,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + GoldFactTableName
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
