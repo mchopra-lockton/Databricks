@@ -56,3 +56,19 @@ connectionProperties = {
 replaceFromCharColumn = "[…• ¢£®°³¼½¾æð•]"
 replaceFromCharData = "‘’–—´ºàÁÂÃÄÅÇÈÉêëíîïÑÓôÖØßùúÜý"
 replaceToCharData = "''--'oaaaaaaceeeeiiinooooBuuuy"
+
+
+# COMMAND ----------
+
+dbutils.widgets.text("DebugMode", "","")
+RunInDebugMode = dbutils.widgets.get("DebugMode")
+print(RunInDebugMode)
+
+# COMMAND ----------
+
+# MAGIC %scala
+# MAGIC dbutils.widgets.text("DebugMode", "","")
+# MAGIC val RunInDebugMode = dbutils.widgets.get("DebugMode")
+
+# COMMAND ----------
+
