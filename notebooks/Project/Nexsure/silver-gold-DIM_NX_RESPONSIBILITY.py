@@ -21,19 +21,22 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "DIM_NX_RESPONSIBILITY"
+# MAGIC }
 
 # COMMAND ----------
 
 # Set the path for Silver layer for Nexsure
 
 now = datetime.now() 
-#sourceSilverPath = "Reference/Nexsure/DimDate/2021/06"
 sourceSilverFolderPath = "Person/Nexsure/DimResponsibility/" +now.strftime("%Y") + "/" + now.strftime("%m")
 sourceSilverPath = SilverContainerPath + sourceSilverFolderPath
 
 sourceSilverFile = "DimResponsibility_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_" + now.strftime("%d") + ".parquet"
-#sourceSilverFile = "DimResponsibility_" + now.strftime("%Y") + "_" + now.strftime("%m") + "_21.parquet"
 sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
 
 dbutils.widgets.text("TableName", "","")
@@ -50,8 +53,6 @@ badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
 
 date_time = now.strftime("%Y%m%dT%H%M%S")
 badRecordsFilePath = badRecordsPath + date_time + "/" + "ErrorRecords"
-#badRecordsPath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/"
-#badRecordsFilePath = "abfss://c360logs@dlsldpdev01v8nkg988.dfs.core.windows.net/Dim_NX_Rate_Type/" + date_time
 recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
 #Set the file path to log error
 #badRecordsPath = badRecordsRootPath + "/" + sourceTable + "/"
@@ -63,34 +64,16 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
   now = datetime.now() 
   GoldDimTableName = "Dim_NX_Responsibility"
   GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "Person/Nexsure/DimResponsibility/" +now.strftime("%Y") + "/06"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "DimResponsibility_2021_06_04.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
   badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
   recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
   BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
   WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimResponsibility/2021/06/DimResponsibility_2021_06_04.parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
-# MAGIC   lazy val GoldDimTableName = "DIM_NX_RESPONSIBILITY"
-# MAGIC }
-
-# COMMAND ----------
-
- # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Person/Nexsure/DimResponsibility/" + yymmManual + "/DimResponsibility_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -106,7 +89,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -167,18 +150,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
