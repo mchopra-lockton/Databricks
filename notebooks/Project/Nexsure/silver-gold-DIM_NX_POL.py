@@ -21,12 +21,16 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "Dim_NX_pol"
+# MAGIC }
 
 # COMMAND ----------
 
-# Set the path for Silver layer for Nexsu
-/
+# Set the path for Silver layer for Nexsure
 now = datetime.now() 
 
 sourceSilverFolderPath = "Policy/Nexsure/DimPolicy/" +now.strftime("%Y") + "/" + now.strftime("%m")
@@ -60,26 +64,15 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell to run manually - DELETE
-now = datetime.now() 
-GoldDimTableName = "Dim_NX_Pol"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicy/" + yymmManual + "/DimPolicy_" + yyyymmddManual + ".parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell to run manually - DELETE
-# MAGIC lazy val GoldDimTableName = "Dim_NX_Pol"
-
-# COMMAND ----------
-
- # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldDimTableName = "Dim_NX_pol"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Nexsure/DimPolicy/" + yymmManual + "/DimPolicy_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -95,7 +88,8 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
+display(sourceSilverDF)
 
 # COMMAND ----------
 
@@ -103,13 +97,13 @@ print(sourceSilverFilePath)
 
 # COMMAND ----------
 
-sourceSilverDF.createOrReplaceTempView("DIM_NX_POL")
+sourceSilverDF.createOrReplaceTempView("DIM_NX_pol")
 
 # COMMAND ----------
 
 pushdown_query = "(select * from [dbo].[DIM_NX_CLIENT]) client"
 clientDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(carrierDF)
+display(clientDF)
 # Register table so it is accessible via SQL Context
 clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
@@ -117,7 +111,7 @@ clientDF.createOrReplaceTempView("DIM_NX_CLIENT")
 
 pushdown_query = "(select * from [dbo].[DIM_NX_CARRIER]) carrier"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(carrierDF)
+display(carrierDF)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
@@ -202,6 +196,7 @@ JOIN DIM_NX_CARRIER icarr on pi.IssuingCarrierNameId = icarr.NX_CARIER_ID
 JOIN DIM_NX_CARRIER bcarr on pi.BillingCarrierNameId = bcarr.NX_CARIER_ID
 """
 )
+display(finalDataDF)
 
 # COMMAND ----------
 
