@@ -22,8 +22,12 @@ dbutils.widgets.removeAll()
 
 # MAGIC %scala
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
-# MAGIC print (GoldDimTableName)
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "Dim_BP_CLIENT"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -95,59 +99,54 @@ sourceBPClientCustomValueeFilePath = SilverContainerPath + "Reference/Benefits/C
 
 # COMMAND ----------
 
-# Temporary cell to run manually - DELETE
-now = datetime.now() 
-date_time = now.strftime("%Y%m%dT%H%M%S")
-GoldDimTableName = "DIM_BP_CLIENT"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  date_time = now.strftime("%Y%m%dT%H%M%S")
+  GoldDimTableName = "DIM_BP_CLIENT"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
-# BP Client data 
-sourceBPClientSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_AllClients/" + yymmManual + "/vw_CLIENT_AllClients_" + yyyymmddManual + ".parquet"
-#ClientAddress
-sourceBPCLientAddressSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_ADDRESS_AllRecs/" + yymmManual + "/vw_CLIENT_ADDRESS_AllRecs_" + yyyymmddManual + ".parquet"
-#Broker
-sourceBPBrokerSilverFilePath = SilverContainerPath + "Person/Benefits/vw_BROKER_AllRecs/" + yymmManual + "/vw_BROKER_AllRecs_" + yyyymmddManual + ".parquet"
-#Brokeroffice
-sourceBPBrokerOfficeSilverFilePath = SilverContainerPath + "OrgStructure/Benefits/vw_BROKER_OFFICE_AllRecs/" + yymmManual + "/vw_BROKER_OFFICE_AllRecs_" + yyyymmddManual + ".parquet"
-#Clientcontact
-sourceBPClientContactSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_CONTACT_AllRecs/" + yymmManual + "/vw_CLIENT_CONTACT_AllRecs_" + yyyymmddManual + ".parquet"
-#BPcontact
-sourceBPContactSilverFilePath = SilverContainerPath + "Person/Benefits/vw_CONTACT_AllRecs/" + yymmManual + "/vw_CONTACT_AllRecs_" + yyyymmddManual + ".parquet"
-#ClientAccountTeam
-sourceBPCLientAccountTeamSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_ACCOUNT_TEAM_AllRecs/" + yymmManual + "/vw_CLIENT_ACCOUNT_TEAM_AllRecs_" + yyyymmddManual + ".parquet"
-#Custom Field Value
-sourceBPCustomFieldSilverFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD_VALUE/" + yymmManual + "/CUSTOM_FIELD_VALUE_" + yyyymmddManual + ".parquet"
-#clientvalieassoc
-sourceBPClientvalueassocSilverFilePath = SilverContainerPath + "Client/Benefits/CF_CLIENT_VALUE_ASSOC/" + yymmManual + "/CF_CLIENT_VALUE_ASSOC_" + yyyymmddManual + ".parquet"
-#Client_service_lead
-sourceBPServiceSilverFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD_VALUE/" + yymmManual + "/CUSTOM_FIELD_VALUE_" + yyyymmddManual + ".parquet"
-#MasterLink data
-sourceMDS2_MasterLinkNoLMSilverFilePath = SilverContainerPath + "Client/MDS2/MasterLinkNoLM/" + yymmManual + "/MasterLinkNoLM_" + yyyymmddManual + ".parquet"
-#DUNS Reffernce Data
-sourceMDS2_DUNS_ReferenceSilverFilePath = SilverContainerPath + "Client/MDS2/DUNS_Reference/" + yymmManual + "/DUNS_Reference_" + yyyymmddManual + ".parquet"
-#PitchBook CompanyData
-sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath = SilverContainerPath + "Client/Pitchbook/PB_ClientToCompany/" + yymmManual + "/PB_ClientToCompany_" + yyyymmddManual + ".parquet"
-#PitchBookClienttoSilver data
-sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath = SilverContainerPath + "Client/Pitchbook/PB_Reference_CompanyActiveInvestorRelation/" + yymmManual + "/PB_Reference_CompanyActiveInvestorRelation_" + yyyymmddManual + ".parquet"
-#exclude table
-sourceBPClientExcludeSilverFilePath = SilverContainerPath + "Business/MDS2/ClientExclude/" + yymmManual + "/ClientExclude_" + yyyymmddManual + ".parquet"
-#CF Option value
-sourceBPClientOptionValueFilePath = SilverContainerPath + "Reference/Benefits/CF_OPTION_VALUE/" + yymmManual + "/CF_OPTION_VALUE_" + yyyymmddManual + ".parquet"
-#Customvalue
-sourceBPClientCustomValueeFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD/" + yymmManual + "/CUSTOM_FIELD_" + yyyymmddManual + ".parquet"
+  # BP Client data 
+  sourceBPClientSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_AllClients/" + yymmManual + "/vw_CLIENT_AllClients_" + yyyymmddManual + ".parquet"
+  #ClientAddress
+  sourceBPCLientAddressSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_ADDRESS_AllRecs/" + yymmManual + "/vw_CLIENT_ADDRESS_AllRecs_" + yyyymmddManual + ".parquet"
+  #Broker
+  sourceBPBrokerSilverFilePath = SilverContainerPath + "Person/Benefits/vw_BROKER_AllRecs/" + yymmManual + "/vw_BROKER_AllRecs_" + yyyymmddManual + ".parquet"
+  #Brokeroffice
+  sourceBPBrokerOfficeSilverFilePath = SilverContainerPath + "OrgStructure/Benefits/vw_BROKER_OFFICE_AllRecs/" + yymmManual + "/vw_BROKER_OFFICE_AllRecs_" + yyyymmddManual + ".parquet"
+  #Clientcontact
+  sourceBPClientContactSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_CONTACT_AllRecs/" + yymmManual + "/vw_CLIENT_CONTACT_AllRecs_" + yyyymmddManual + ".parquet"
+  #BPcontact
+  sourceBPContactSilverFilePath = SilverContainerPath + "Person/Benefits/vw_CONTACT_AllRecs/" + yymmManual + "/vw_CONTACT_AllRecs_" + yyyymmddManual + ".parquet"
+  #ClientAccountTeam
+  sourceBPCLientAccountTeamSilverFilePath = SilverContainerPath + "Client/Benefits/vw_CLIENT_ACCOUNT_TEAM_AllRecs/" + yymmManual + "/vw_CLIENT_ACCOUNT_TEAM_AllRecs_" + yyyymmddManual + ".parquet"
+  #Custom Field Value
+  sourceBPCustomFieldSilverFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD_VALUE/" + yymmManual + "/CUSTOM_FIELD_VALUE_" + yyyymmddManual + ".parquet"
+  #clientvalieassoc
+  sourceBPClientvalueassocSilverFilePath = SilverContainerPath + "Client/Benefits/CF_CLIENT_VALUE_ASSOC/" + yymmManual + "/CF_CLIENT_VALUE_ASSOC_" + yyyymmddManual + ".parquet"
+  #Client_service_lead
+  sourceBPServiceSilverFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD_VALUE/" + yymmManual + "/CUSTOM_FIELD_VALUE_" + yyyymmddManual + ".parquet"
+  #MasterLink data
+  sourceMDS2_MasterLinkNoLMSilverFilePath = SilverContainerPath + "Client/MDS2/MasterLinkNoLM/" + yymmManual + "/MasterLinkNoLM_" + yyyymmddManual + ".parquet"
+  #DUNS Reffernce Data
+  sourceMDS2_DUNS_ReferenceSilverFilePath = SilverContainerPath + "Client/MDS2/DUNS_Reference/" + yymmManual + "/DUNS_Reference_" + yyyymmddManual + ".parquet"
+  #PitchBook CompanyData
+  sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath = SilverContainerPath + "Client/Pitchbook/PB_ClientToCompany/" + yymmManual + "/PB_ClientToCompany_" + yyyymmddManual + ".parquet"
+  #PitchBookClienttoSilver data
+  sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath = SilverContainerPath + "Client/Pitchbook/PB_Reference_CompanyActiveInvestorRelation/" + yymmManual + "/PB_Reference_CompanyActiveInvestorRelation_" + yyyymmddManual + ".parquet"
+  #exclude table
+  sourceBPClientExcludeSilverFilePath = SilverContainerPath + "Business/MDS2/ClientExclude/" + yymmManual + "/ClientExclude_" + yyyymmddManual + ".parquet"
+  #CF Option value
+  sourceBPClientOptionValueFilePath = SilverContainerPath + "Reference/Benefits/CF_OPTION_VALUE/" + yymmManual + "/CF_OPTION_VALUE_" + yyyymmddManual + ".parquet"
+  #Customvalue
+  sourceBPClientCustomValueeFilePath = SilverContainerPath + "Reference/Benefits/CUSTOM_FIELD/" + yymmManual + "/CUSTOM_FIELD_" + yyyymmddManual + ".parquet"
 
-# HARD CODED FILE NAMES - CURRENT FILES NOT AVAILABLE
-sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath= "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_ClientToCompany/2021/06/PB_ClientToCompany_2021_06_22.parquet"
-sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath ="abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_Reference_CompanyActiveInvestorRelation/2021/06/PB_Reference_CompanyActiveInvestorRelation_2021_06_22.parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell to run manually - DELETE
-# MAGIC lazy val GoldDimTableName = "Dim_BP_CLIENT"  
+  # HARD CODED FILE NAMES - CURRENT FILES NOT AVAILABLE
+  sourceMDS2_Pitchbook_PB_ClientToCompanySilverFilePath= "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_ClientToCompany/2021/06/PB_ClientToCompany_2021_06_22.parquet"
+  sourceMDS2_PB_Reference_CompanyActiveInvestorRelationSilverFilePath ="abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Pitchbook/PB_Reference_CompanyActiveInvestorRelation/2021/06/PB_Reference_CompanyActiveInvestorRelation_2021_06_22.parquet"
 
 # COMMAND ----------
 
@@ -482,24 +481,6 @@ SELECT
 FROM SilverBPClientTemp e LIMIT 1
 """
 )
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC /*SELECT
-# MAGIC a.CLIENT_ID as BP_CLNT_ID ,
-# MAGIC CASE WHEN z.SourceId IS NULL THEN 'N' ELSE 'Y' END as CONFDL_ACCT 
-# MAGIC from SilverBPClientTemp a
-# MAGIC LEFT JOIN SilverBPClientExclude z on a.client_id = z.SourceId
-# MAGIC WHERE SourceId is NOT NULL
-# MAGIC 
-# MAGIC SELECT
-# MAGIC OWNER_OFFICE_ID
-# MAGIC from SilverBPClientTemp a
-# MAGIC */
-# MAGIC SELECT
-# MAGIC BRNCH_NUM
-# MAGIC from DIM_BP_ORG org
 
 # COMMAND ----------
 
