@@ -23,7 +23,12 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC 
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "Dim_NX_CARRIER"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -63,34 +68,17 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell to run manually - DELETE
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
   now = datetime.now() 
-  GoldDimTableName = "Dim_NX_Carrier"
+  GoldDimTableName = "Dim_NX_CARRIER"
   GoldFactTableName = "FCT_NX_INV_LINE_ITEM_TRANS"
-  sourceSilverPath = "Client/Nexsure/DimEntity/" +now.strftime("%Y") + "/05"
-  sourceSilverPath = SilverContainerPath + sourceSilverPath
-  sourceSilverFile = "DimEntity_2021_05_25.parquet"
-  sourceSilverFilePath = sourceSilverPath + "/" + sourceSilverFile
   badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
   recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
   BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
   WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/2021/06/DimEntity_2021_06_04.parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell to run manually - DELETE
-# MAGIC if (GoldDimTableName == "") {
-# MAGIC   lazy val GoldDimTableName = "Dim_NX_Carrier"
-# MAGIC }  
-
-# COMMAND ----------
-
- # Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverPath == "" or sourceSilverFile == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Client/Nexsure/DimEntity/" + yymmManual + "/DimEntity_" + yyyymmddManual + ".parquet"
+  print(sourceSilverFilePath)
 
 # COMMAND ----------
 
@@ -108,7 +96,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -117,30 +105,26 @@ sourceSilverDF.createOrReplaceTempView("DIM_NX_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[BP_NX_REF_CARRIER_MAPPING]) client"
+pushdown_query = "(select * from [dbo].[BP_NX_REF_CARRIER_MAPPING]) refcarriermapping"
 carriermapDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(clientDF)
+display(carriermapDF)
 # Register table so it is accessible via SQL Context
 carriermapDF.createOrReplaceTempView("BP_NX_REF_CARRIER_MAPPING")
 
 # COMMAND ----------
 
-pushdown_query = "(select * from [dbo].[BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING]) client"
+pushdown_query = "(select * from [dbo].[BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING]) monthlyimport"
 ambDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
-# display(clientDF)
+display(ambDF)
 # Register table so it is accessible via SQL Context
 ambDF.createOrReplaceTempView("BP_NX_REF_AM_BEST_MONTHLY_IMPORT_MAPPING")
-
-# COMMAND ----------
-
-ambDF.count()
 
 # COMMAND ----------
 
 dummyDataDF = spark.sql(
 f""" 
 SELECT
- -99999 AS NX_CARIER_KEY
+ -99999 As NX_CARIER_KEY
 ,-1 As NX_CARIER_ID
 ,-1 As CARIER_CLAS
 ,-1 As CARIER_NAME
@@ -165,6 +149,8 @@ SELECT
 ,-1 As AMB_PARNT_NAME
 ,-1 As AMB_ULTMT_PARNT_NUM
 ,-1 As AMB_ULTMT_PARNT_NAME
+,-1 As CNTRY_OF_DOMICILE
+,-1 As BSTS_FINCL_STRNGTH_RATNG_ALPHA
 ,-1 As DESCRIPTION
 ,-1 As STRT_DT
 ,-1 As END_DT
@@ -174,6 +160,13 @@ SELECT
 ,'{ WorkFlowId }' AS ETL_WRKFLW_ID
 ,current_timestamp() AS ETL_CREATED_DT
 ,current_timestamp() AS ETL_UPDATED_DT
+,-1 As VALID_PREMIUM
+,-1 As BCO_CATG
+,-1 As PREF_WHOLESALER
+,-1 As PREF_GRP
+,-1 As PS_BCO_CD
+,-1 As PS_BCO_DESC
+,-1 As PS_CARIER_STATUS
 from DIM_NX_CARRIER e LIMIT 1
 """
 )
@@ -259,18 +252,6 @@ reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
 
 # COMMAND ----------
 
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + finalTableSchema + "." + "FCT_NX_INV_LINE_ITEM_TRANS"
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
-
-# COMMAND ----------
-
 GoldDimTableNameComplete = finalTableSchema + "." + GoldDimTableName
 dummyDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
 finalDataDF.write.jdbc(url=Url, table=GoldDimTableNameComplete, mode="append")
@@ -286,3 +267,6 @@ sourceGoldFile = dbutils.widgets.get("ProjectFileName")
 spark.sql("set spark.sql.legacy.parquet.int96RebaseModeInWrite=CORRECTED")
 sourceGoldFilePath = GoldContainerPath + sourceGoldPath + "/" + sourceGoldFile
 finalDataDF.write.mode("overwrite").parquet(sourceGoldFilePath)
+
+# COMMAND ----------
+
