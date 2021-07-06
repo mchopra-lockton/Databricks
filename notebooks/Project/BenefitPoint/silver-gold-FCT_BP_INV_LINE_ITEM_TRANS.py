@@ -21,7 +21,11 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldFactTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldFactTableName = dbutils.widgets.get("TableName")
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -65,30 +69,19 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-#now = datetime.now() 
-GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
-POSsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTING_RECORD_AllRecs/" + yymmManual + "/vw_POSTING_RECORD_AllRecs_" + yyyymmddManual + ".parquet"
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+  POSsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTING_RECORD_AllRecs/" + yymmManual + "/vw_POSTING_RECORD_AllRecs_" + yyyymmddManual + ".parquet"
 
-SPLsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTED_SPLIT_AllRecs/" + yymmManual + "/vw_POSTED_SPLIT_AllRecs_" + yyyymmddManual + ".parquet"
+  SPLsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_POSTED_SPLIT_AllRecs/" + yymmManual + "/vw_POSTED_SPLIT_AllRecs_" + yyyymmddManual + ".parquet"
 
-SENTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_ENTRY_AllRecs/" + yymmManual + "/vw_STATEMENT_ENTRY_AllRecs_" + yyyymmddManual + ".parquet"
+  SENTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_ENTRY_AllRecs/" + yymmManual + "/vw_STATEMENT_ENTRY_AllRecs_" + yyyymmddManual + ".parquet"
 
-STMTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_AllRecs/" + yymmManual + "/vw_STATEMENT_AllRecs_" + yyyymmddManual + ".parquet"
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC lazy val GoldFactTableName = "FCT_BP_INV_LINE_ITEM_TRANS"
-
-# COMMAND ----------
-
-# Do not proceed if any of the parameters are missing
-if (GoldFactTableName == "" or POSsourceSilverFilePath == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+  STMTsourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Revenue/Benefits/vw_STATEMENT_AllRecs/" + yymmManual + "/vw_STATEMENT_AllRecs_" + yyyymmddManual + ".parquet"
 
 # COMMAND ----------
 
@@ -105,7 +98,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + POSsourceSilverFilePath}}})  
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + POSsourceSilverFilePath}}})  
 
 # COMMAND ----------
 
@@ -122,7 +115,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + SPLsourceSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + SPLsourceSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -139,7 +132,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + SENTsourceSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + SENTsourceSilverFilePath}}})
 
 # COMMAND ----------
 
@@ -156,7 +149,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + STMTsourceSilverFilePath}}})
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + STMTsourceSilverFilePath}}})
 
 # COMMAND ----------
 
