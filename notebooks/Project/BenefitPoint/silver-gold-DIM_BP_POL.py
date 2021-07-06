@@ -21,11 +21,12 @@ dbutils.widgets.removeAll()
 # MAGIC %scala
 # MAGIC 
 # MAGIC dbutils.widgets.text("TableName", "","")
-# MAGIC lazy val GoldDimTableName = dbutils.widgets.get("TableName")
+# MAGIC var GoldDimTableName = dbutils.widgets.get("TableName")
 # MAGIC 
-# MAGIC lazy val GoldFactTableName = "Gold.FCT_BP_INV_LINE_ITEM_TRANS"
-# MAGIC print (GoldDimTableName)
-# MAGIC print (GoldFactTableName)
+# MAGIC // USE WHEN RUN IN DEBUG MODE
+# MAGIC if (RunInDebugMode != "No") {
+# MAGIC   GoldDimTableName = "DIM_BP_POL"
+# MAGIC }
 
 # COMMAND ----------
 
@@ -67,32 +68,21 @@ print (recordCountFilePath)
 
 # COMMAND ----------
 
-# Temporary cell - DELETE
-now = datetime.now() 
-GoldDimTableName = "DIM_BP_POL"
-badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
-recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
-BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
-WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
+# USE WHEN RUN IN DEBUG MODE
+if (RunInDebugMode != 'No'):
+  now = datetime.now() 
+  GoldDimTableName = "DIM_BP_POL"
+  badRecordsPath = badRecordsRootPath + GoldDimTableName + "/"
+  recordCountFilePath = badRecordsPath + date_time + "/" + "RecordCount"
+  BatchId = "1afc2b6c-d987-48cc-ae8c-a7f41ea27249"
+  WorkFlowId ="8fc2895d-de32-4bf4-a531-82f0c6774221"
 
-sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_AllPlans/" + yymmManual + "/vw_PLAN_AllPlans_" + yyyymmddManual + ".parquet"
-adhocSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" + yymmManual + "/vw_ADHOC_PRODUCT_AllPlans_" + yyyymmddManual + ".parquet"
-planTypeSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_TYPE_AllTypes/" + yymmManual + "/vw_PLAN_TYPE_AllTypes_" + yyyymmddManual + ".parquet"
-print(sourceSilverFilePath)
-print(adhocSourceSilverFilePath)
-print(planTypeSourceSilverFilePath)
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Temporary cell - DELETE
-# MAGIC  val GoldDimTableName = "DIM_BP_POL"
-
-# COMMAND ----------
-
-# Do not proceed if any of the parameters are missing
-if (GoldDimTableName == "" or sourceSilverFilePath == "" or adhocSourceSilverFilePath == ""):
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Input parameters are missing"}}})
+  sourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_AllPlans/" + yymmManual + "/vw_PLAN_AllPlans_" + yyyymmddManual + ".parquet"
+  adhocSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_ADHOC_PRODUCT_AllPlans/" + yymmManual + "/vw_ADHOC_PRODUCT_AllPlans_" + yyyymmddManual + ".parquet"
+  planTypeSourceSilverFilePath = "abfss://c360silver@dlsldpdev01v8nkg988.dfs.core.windows.net/Policy/Benefits/vw_PLAN_TYPE_AllTypes/" + yymmManual + "/vw_PLAN_TYPE_AllTypes_" + yyyymmddManual + ".parquet"
+  print(sourceSilverFilePath)
+  print(adhocSourceSilverFilePath)
+  print(planTypeSourceSilverFilePath)
 
 # COMMAND ----------
 
@@ -109,7 +99,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + sourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -125,7 +115,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + adhocSourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + adhocSourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -141,7 +131,7 @@ except:
   ],["TableName","ETL_CREATED_DT","Filename","ETL_BATCH_ID","ETL_WRKFLW_ID","Message"])
   # Write the recon record to SQL DB
   errorDF.write.jdbc(url=Url, table=reconTable, mode="append")  
-  dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + planTypeSourceSilverFilePath}}}) 
+  #dbutils.notebook.exit({"exceptVariables": {"errorCode": {"value": "Error reading the file: " + planTypeSourceSilverFilePath}}}) 
 
 # COMMAND ----------
 
@@ -244,7 +234,7 @@ carrierDF.createOrReplaceTempView("DIM_BP_CARRIER")
 
 # COMMAND ----------
 
-pushdown_query = "(select CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
+pushdown_query = "(select BP_CLNT_ID,SURR_CLNT_ID from [dbo].[DIM_BP_CLIENT]) PC"
 carrierDF = spark.read.jdbc(url=Url, table=pushdown_query, properties=connectionProperties)
 # Register table so it is accessible via SQL Context
 carrierDF.createOrReplaceTempView("DIM_BP_CLIENT")
@@ -362,7 +352,7 @@ current_timestamp() AS ETL_UPDATED_DT
 FROM DIM_BP_PLAN_ADHOC_PRODUCT pa
 LEFT JOIN DIM_BP_CARRIER icarr on pa.CARRIER_ID = icarr.CARIER_ID
 LEFT JOIN DIM_BP_CARRIER bcarr on pa.BILLING_CARRIER_ID = bcarr.CARIER_ID
-LEFT JOIN DIM_BP_CLIENT client on pa.CLIENT_ID = client.CLNT_ID
+LEFT JOIN DIM_BP_CLIENT client on pa.CLIENT_ID = client.BP_CLNT_ID
 LEFT JOIN DIM_BP_LOB lob on pa.PLAN_TYPE_ID = lob.BP_LOB_ID
 LEFT JOIN DIM_BP_PLAN_TYPE pt on pa.PLAN_TYPE_ID = pt.PLAN_TYPE_ID
 --JOIN DIM_BP_LOB p on pa.PLAN_ID = p.PLAN_ID
@@ -392,18 +382,6 @@ reconDF = spark.createDataFrame([
 
 # Write the recon record to SQL DB
 reconDF.write.jdbc(url=Url, table=reconTable, mode="append")
-
-# COMMAND ----------
-
-# MAGIC %scala
-# MAGIC // Truncate Fact table and Delete data from Dimension table
-# MAGIC lazy val connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword)
-# MAGIC lazy val stmt = connection.createStatement()
-# MAGIC //lazy val sql_truncate = "truncate table " + GoldFactTableName
-# MAGIC //stmt.execute(sql_truncate)
-# MAGIC lazy val sql = "exec " + finalTableSchema + ".[DropAndCreateFKContraints] @GoldTableName = '" + GoldDimTableName + "'"
-# MAGIC stmt.execute(sql)
-# MAGIC connection.close()
 
 # COMMAND ----------
 
